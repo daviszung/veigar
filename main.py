@@ -1,7 +1,15 @@
 import pygame
 import sys
 
-from scripts.utils import load_img, load_audio
+from typing import Dict, List, Tuple
+
+from scripts.utils import load_img
+from scripts.tiles import Tilemap
+
+
+map: Dict[str, List[Tuple[int, int]]] = {
+    "grass": [(1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10),(11, 10),(12, 10),(13, 10),(14, 10),(15, 10),(16, 10),(17, 10), (18, 10)]
+}
 
 class Game:
     def __init__(self):
@@ -11,16 +19,23 @@ class Game:
         self.screen_width = 1280
         self.screen_height = 720
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.canvas_width = self.screen_width / 4
+        self.canvas_height = self.screen_height / 4
+        self.canvas = pygame.Surface((self.canvas_width, self.canvas_height))
         self.clock = pygame.time.Clock()
+
+        sheet = pygame.image.load("assets/sheet.png")
+        self.platform = sheet.subsurface(128, 80, 16, 16).convert()
+
+        self.map = Tilemap(map, self.platform)
 
         # player
         self.player_pos = pygame.Vector2(
-            self.screen.get_width() / 2, self.screen.get_height() / 2
+            self.canvas.get_width() / 2, self.canvas.get_height() / 2
         )
-        self.player = pygame.transform.scale_by(
-            pygame.image.load("assets/mage/Idle/Idle1.png"), (3, 3)
-        ).convert()
+        self.player = load_img("Idle/Idle1.png")
         self.player.set_colorkey((0, 0, 0))
+        self.player_terminal_velocity = 5
         self.playerVelocity = 0
         self.playerAirborne = True
         self.lastDirection = "right"
@@ -70,22 +85,13 @@ class Game:
             ],
         }
 
-        self.sfx = {
-            "jump": load_audio("jump1.wav", 0.5) 
-        }
-
-        sheet = pygame.image.load("assets/sheet.png")
-        scaled_sheet = pygame.transform.scale_by(sheet, (4, 4))
-
-        platformTexture = pygame.Rect(512, 320, 64, 145)
-        platform = scaled_sheet.subsurface(platformTexture).convert()
-
         self.large_platform = pygame.Surface(
             (self.screen_width - 150, 100), pygame.SRCALPHA
         )
 
-        for i in range((self.screen_width - 150) // platform.get_width() + 1):
-            self.large_platform.blit(platform, (i * platform.get_width(), 0))
+        for i in range((self.screen_width - 150) // self.platform.get_width() + 1):
+            self.large_platform.blit(self.platform, (i * self.platform.get_width(), 0))
+        
 
     def run(self):
         while True:
@@ -98,19 +104,18 @@ class Game:
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_SPACE] and not self.playerAirborne:
-                self.playerVelocity -= 4
+                self.playerVelocity -= 3
                 self.playerAirborne = True
-                self.sfx["jump"].play()
             if keys[pygame.K_d] and self.playerAirborne:
                 self.playerVelocity += 0.1
             if keys[pygame.K_s]:
-                self.player_pos.x -= 4
+                self.player_pos.x -= 2
                 self.lastDirection = "left"
                 if not self.playerAirborne:
                     self.currentAnimation = "run"
             if keys[pygame.K_f]:
                 self.lastDirection = "right"
-                self.player_pos.x += 4
+                self.player_pos.x += 2
                 if not self.playerAirborne:
                     self.currentAnimation = "run"
             if keys[pygame.K_j] and not keys[pygame.K_s] and not keys[pygame.K_f]:
@@ -122,7 +127,7 @@ class Game:
                     self.currentAnimation = "rising"
                 else:
                     self.currentAnimation = "falling"
-                self.playerVelocity += 0.12
+                self.playerVelocity = min(self.player_terminal_velocity, self.playerVelocity + 0.12)
                 self.player_pos.y += self.playerVelocity
 
             player_hitbox = pygame.Rect(
@@ -133,7 +138,7 @@ class Game:
             )
             platform_hitbox = pygame.Rect(
                 75,
-                self.screen_height - 80,
+                self.canvas_height - 16,
                 self.large_platform.get_width(),
                 self.large_platform.get_height(),
             )
@@ -157,9 +162,6 @@ class Game:
             if self.lastDirection == "left":
                 player_surf = pygame.transform.flip(player_surf, True, False)
 
-            # finally... render
-            self.screen.blit(player_surf, player_coord)
-
             # cycle animation
             if self.animationStage >= 25:
                 self.animationStage = 0
@@ -168,7 +170,12 @@ class Game:
             else:
                 self.animationStage += 1
 
-            self.screen.blit(self.large_platform, (75, self.screen_height - 80))
+            # finally... render
+            self.canvas.fill("gray")
+            self.canvas.blit(self.map.render(self.canvas), (0, 0))
+            self.canvas.blit(player_surf, player_coord)
+            
+            self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
             # idle animation
             if (
