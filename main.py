@@ -8,8 +8,11 @@ from scripts.tiles import Tilemap
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
-    "grass": [(1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10),(11, 10),(12, 10),(13, 10),(14, 10),(15, 10),(16, 10),(17, 10), (18, 10)]
+    "grass": [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10),(11, 10),(12, 10),(13, 10),(14, 10),(15, 10),(16, 10),(17, 10), (18, 10), (19, 10)]
 }
+
+# for detecting the terrain nearest and underneath the player
+OFFSET = [(-1, 1), (0, 1), (1, 1)]
 
 class Game:
     def __init__(self):
@@ -17,7 +20,7 @@ class Game:
         pygame.display.set_caption("veigar")
 
         self.screen_width = 1280
-        self.screen_height = 720
+        self.screen_height = 704
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         self.canvas_width = self.screen_width / 4
         self.canvas_height = self.screen_height / 4
@@ -35,6 +38,7 @@ class Game:
         )
         self.player = load_img("Idle/Idle1.png")
         self.player.set_colorkey((0, 0, 0))
+        self.player_size = 16
         self.player_terminal_velocity = 5
         self.playerVelocity = 0
         self.playerAirborne = True
@@ -100,8 +104,6 @@ class Game:
                     pygame.quit()
                     sys.exit()
 
-            self.screen.fill("gray")
-
             keys = pygame.key.get_pressed()
             if keys[pygame.K_SPACE] and not self.playerAirborne:
                 self.playerVelocity -= 3
@@ -109,15 +111,19 @@ class Game:
             if keys[pygame.K_d] and self.playerAirborne:
                 self.playerVelocity += 0.1
             if keys[pygame.K_s]:
-                self.player_pos.x -= 2
                 self.lastDirection = "left"
-                if not self.playerAirborne:
-                    self.currentAnimation = "run"
+                # ensure player doesn't run off screen
+                if self.player_pos.x > 0:
+                    self.player_pos.x -= 2
+                    if not self.playerAirborne:
+                        self.currentAnimation = "run"
             if keys[pygame.K_f]:
                 self.lastDirection = "right"
-                self.player_pos.x += 2
-                if not self.playerAirborne:
-                    self.currentAnimation = "run"
+                # ensure player doesn't run off screen
+                if self.player_pos.x < (self.canvas_width - self.player_size):
+                    self.player_pos.x += 2
+                    if not self.playerAirborne:
+                        self.currentAnimation = "run"
             if keys[pygame.K_j] and not keys[pygame.K_s] and not keys[pygame.K_f]:
                 self.animationStage = 0
                 self.currentAnimation = "attack"
@@ -130,25 +136,33 @@ class Game:
                 self.playerVelocity = min(self.player_terminal_velocity, self.playerVelocity + 0.12)
                 self.player_pos.y += self.playerVelocity
 
+            # collision detection with map
             player_hitbox = pygame.Rect(
                 self.player_pos.x,
                 self.player_pos.y,
-                self.player.get_width(),
-                self.player.get_height(),
-            )
-            platform_hitbox = pygame.Rect(
-                75,
-                self.canvas_height - 16,
-                self.large_platform.get_width(),
-                self.large_platform.get_height(),
+                self.player_size,
+                self.player_size,
             )
 
-            if player_hitbox.colliderect(platform_hitbox):
-                self.playerVelocity = 0
-                self.playerAirborne = False
-                player_hitbox.bottom = platform_hitbox.top
-                self.player_pos.y = player_hitbox.bottom - player_hitbox.height
-
+            # find where the player is and what tiles are closest to the player
+            player_tile = (int(self.player_pos.x // 16), int(self.player_pos.y // 16))
+            nearby_tiles: List[Tuple[int, int]] = []
+            for i in OFFSET:
+                nearby_tiles.append((player_tile[0] + i[0], player_tile[1] + i[1]))
+            
+            # create hitboxes for the tiles that are terrain and are close to the player
+            nearby_rects: List[pygame.Rect] = []
+            for i in nearby_tiles:
+                if i in map["grass"]:
+                    nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
+                
+            # collision detection with the nearest terrain
+            for i in nearby_rects:
+                if player_hitbox.colliderect(i):
+                    self.playerVelocity = 0
+                    self.playerAirborne = False
+                    player_hitbox.bottom = i.top
+                    self.player_pos.y = player_hitbox.bottom - player_hitbox.height
 
             # stuff to render
             player_surf = self.player_animations[self.currentAnimation][self.animationStage // 5]
@@ -156,7 +170,7 @@ class Game:
 
             # special rendering for attack
             if self.currentAnimation == "attack":
-                player_coord = (self.player_pos.x, self.player_pos.y - 48)
+                player_coord = (self.player_pos.x, self.player_pos.y - 16)
 
             # render the player and render according to if moving right or left
             if self.lastDirection == "left":
@@ -170,20 +184,20 @@ class Game:
             else:
                 self.animationStage += 1
 
+            # idle animation
+            if (
+                not self.playerAirborne
+                and self.playerVelocity == 0
+                and self.currentAnimation != "attack"
+            ):
+                self.currentAnimation = "idle"
+
             # finally... render
             self.canvas.fill("gray")
             self.canvas.blit(self.map.render(self.canvas), (0, 0))
             self.canvas.blit(player_surf, player_coord)
-            
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
-            # idle animation
-            if (
-                self.playerVelocity == 0
-                and not self.playerAirborne
-                and self.currentAnimation != "attack"
-            ):
-                self.currentAnimation = "idle"
 
             # refresh the screen
             pygame.display.update()
