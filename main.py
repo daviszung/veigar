@@ -8,11 +8,14 @@ from scripts.tiles import Tilemap
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
-    "grass": [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10),(11, 10),(12, 10),(13, 10),(14, 10),(15, 10),(16, 10),(17, 10), (18, 10), (19, 10)]
+    "grass": [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10),(11, 10),(12, 10),(13, 10),(14, 10),(15, 10),(16, 10),(17, 10), (18, 10), (19, 10), (6, 6), (8, 8)]
 }
 
-# for detecting the terrain nearest and underneath the player
-OFFSET = [(-1, 1), (0, 1), (1, 1)]
+# for detecting the terrain nearest the player and specifically underneath or to the left or right
+OFFSET = [(-1, 1), (0, 1), (1, 1), (-1, 2), (0, 2), (1, 2), (-1, 0), (0, 0), (1, 0), (-1, -1), (0, -1), (1, -1)]
+
+
+
 
 class Game:
     def __init__(self):
@@ -33,14 +36,13 @@ class Game:
         self.map = Tilemap(map, self.platform)
 
         # player
-        self.player_pos = pygame.Vector2(
-            self.canvas.get_width() / 2, self.canvas.get_height() / 2
-        )
         self.player = load_img("Idle/Idle1.png")
         self.player.set_colorkey((0, 0, 0))
         self.player_size = 16
+        self.player_rect = pygame.Rect(0, 0, self.player_size, self.player_size)
         self.player_terminal_velocity = 5
-        self.playerVelocity = 0
+        self.playerYVelocity = 0
+        self.playerXVelocity = 0
         self.playerAirborne = True
         self.lastDirection = "right"
         self.currentAnimation = "idle"
@@ -89,13 +91,33 @@ class Game:
             ],
         }
 
-        self.large_platform = pygame.Surface(
-            (self.screen_width - 150, 100), pygame.SRCALPHA
-        )
+    def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
+        collisions: List[pygame.Rect] = []
+        for tile in tiles:
+            if hitbox.colliderect(tile):
+                collisions.append(tile)
+        return collisions
 
-        for i in range((self.screen_width - 150) // self.platform.get_width() + 1):
-            self.large_platform.blit(self.platform, (i * self.platform.get_width(), 0))
+    def move_player(self, hitbox: pygame.Rect, movement: Tuple[float, float], tiles: List[pygame.Rect]):
+        hitbox.x += movement[0]
+        collisions = self.collision_test(hitbox, tiles)
+        for tile in collisions:
+            if movement[0] > 0:
+                hitbox.right = tile.left
+            elif movement[0] < 0:
+                hitbox.left = tile.right
         
+        hitbox.y += movement[1]
+        collisions = self.collision_test(hitbox, tiles)
+        for tile in collisions:
+            if movement[1] > 0:
+                hitbox.bottom = tile.top
+                self.playerYVelocity = 0
+                self.playerAirborne = False
+            elif movement[1] < 0:
+                hitbox.top = tile.bottom
+        
+        return hitbox
 
     def run(self):
         while True:
@@ -104,48 +126,43 @@ class Game:
                     pygame.quit()
                     sys.exit()
 
+            player_x_movement = 0
             keys = pygame.key.get_pressed()
             if keys[pygame.K_SPACE] and not self.playerAirborne:
-                self.playerVelocity -= 3
+                self.playerYVelocity -= 3
                 self.playerAirborne = True
             if keys[pygame.K_d] and self.playerAirborne:
-                self.playerVelocity += 0.1
+                self.playerYVelocity += 0.1
             if keys[pygame.K_s]:
                 self.lastDirection = "left"
                 # ensure player doesn't run off screen
-                if self.player_pos.x > 0:
-                    self.player_pos.x -= 2
+                if self.player_rect.x > 0:
+                    player_x_movement -= 2
                     if not self.playerAirborne:
                         self.currentAnimation = "run"
             if keys[pygame.K_f]:
                 self.lastDirection = "right"
                 # ensure player doesn't run off screen
-                if self.player_pos.x < (self.canvas_width - self.player_size):
-                    self.player_pos.x += 2
+                if self.player_rect.x < (self.canvas_width - self.player_size):
+                    player_x_movement += 2
                     if not self.playerAirborne:
                         self.currentAnimation = "run"
             if keys[pygame.K_j] and not keys[pygame.K_s] and not keys[pygame.K_f]:
                 self.animationStage = 0
                 self.currentAnimation = "attack"
+            
+
+            self.playerYVelocity = min(self.player_terminal_velocity, self.playerYVelocity + 0.12)
 
             if self.playerAirborne:
-                if self.playerVelocity < 0:
+                if self.playerYVelocity < 0:
                     self.currentAnimation = "rising"
                 else:
                     self.currentAnimation = "falling"
-                self.playerVelocity = min(self.player_terminal_velocity, self.playerVelocity + 0.12)
-                self.player_pos.y += self.playerVelocity
 
-            # collision detection with map
-            player_hitbox = pygame.Rect(
-                self.player_pos.x,
-                self.player_pos.y,
-                self.player_size,
-                self.player_size,
-            )
 
             # find where the player is and what tiles are closest to the player
-            player_tile = (int(self.player_pos.x // 16), int(self.player_pos.y // 16))
+            player_tile = (int(self.player_rect.x // 16), int(self.player_rect.y // 16))
             nearby_tiles: List[Tuple[int, int]] = []
             for i in OFFSET:
                 nearby_tiles.append((player_tile[0] + i[0], player_tile[1] + i[1]))
@@ -155,22 +172,15 @@ class Game:
             for i in nearby_tiles:
                 if i in map["grass"]:
                     nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
-                
-            # collision detection with the nearest terrain
-            for i in nearby_rects:
-                if player_hitbox.colliderect(i):
-                    self.playerVelocity = 0
-                    self.playerAirborne = False
-                    player_hitbox.bottom = i.top
-                    self.player_pos.y = player_hitbox.bottom - player_hitbox.height
+
+            player_coord = self.move_player(self.player_rect, (player_x_movement, self.playerYVelocity), nearby_rects)
 
             # stuff to render
             player_surf = self.player_animations[self.currentAnimation][self.animationStage // 5]
-            player_coord = (self.player_pos.x, self.player_pos.y)
 
             # special rendering for attack
             if self.currentAnimation == "attack":
-                player_coord = (self.player_pos.x, self.player_pos.y - 16)
+                player_coord = (self.player_rect.x, self.player_rect.y - 16)
 
             # render the player and render according to if moving right or left
             if self.lastDirection == "left":
@@ -187,7 +197,7 @@ class Game:
             # idle animation
             if (
                 not self.playerAirborne
-                and self.playerVelocity == 0
+                and self.playerYVelocity == 0
                 and self.currentAnimation != "attack"
             ):
                 self.currentAnimation = "idle"
