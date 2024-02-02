@@ -5,16 +5,51 @@ from typing import Dict, List, Tuple
 
 from scripts.utils import load_img
 from scripts.tiles import Tilemap
+from scripts.projectile import Projectile
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
-    "grass": [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10),(11, 10),(12, 10),(13, 10),(14, 10),(15, 10),(16, 10),(17, 10), (18, 10), (19, 10), (6, 6), (8, 8)]
+    "grass": [
+        (0, 10),
+        (1, 10),
+        (2, 10),
+        (3, 10),
+        (4, 10),
+        (5, 10),
+        (6, 10),
+        (7, 10),
+        (8, 10),
+        (9, 10),
+        (10, 10),
+        (11, 10),
+        (12, 10),
+        (13, 10),
+        (14, 10),
+        (15, 10),
+        (16, 10),
+        (17, 10),
+        (18, 10),
+        (19, 10),
+        (6, 6),
+        (8, 8),
+    ]
 }
 
-# for detecting the terrain nearest the player and specifically underneath or to the left or right
-OFFSET = [(-1, 1), (0, 1), (1, 1), (-1, 2), (0, 2), (1, 2), (-1, 0), (0, 0), (1, 0), (-1, -1), (0, -1), (1, -1)]
-
-
+# for detecting terrain nearest to the player
+OFFSET = [
+    (-1, 1),
+    (0, 1),
+    (1, 1),
+    (-1, 2),
+    (0, 2),
+    (1, 2),
+    (-1, 0),
+    (0, 0),
+    (1, 0),
+    (-1, -1),
+    (0, -1),
+    (1, -1),
+]
 
 
 class Game:
@@ -34,6 +69,8 @@ class Game:
         self.platform = sheet.subsurface(128, 80, 16, 16).convert()
 
         self.map = Tilemap(map, self.platform)
+
+        self.projectiles: List[Projectile] = []
 
         # player
         self.player = load_img("Idle/Idle1.png")
@@ -98,7 +135,12 @@ class Game:
                 collisions.append(tile)
         return collisions
 
-    def move_player(self, hitbox: pygame.Rect, movement: Tuple[float, float], tiles: List[pygame.Rect]):
+    def move_player(
+        self,
+        hitbox: pygame.Rect,
+        movement: Tuple[float, float],
+        tiles: List[pygame.Rect],
+    ):
         hitbox.x += movement[0]
         collisions = self.collision_test(hitbox, tiles)
         for tile in collisions:
@@ -106,7 +148,7 @@ class Game:
                 hitbox.right = tile.left
             elif movement[0] < 0:
                 hitbox.left = tile.right
-        
+
         hitbox.y += movement[1]
         collisions = self.collision_test(hitbox, tiles)
         for tile in collisions:
@@ -116,7 +158,7 @@ class Game:
                 self.playerAirborne = False
             elif movement[1] < 0:
                 hitbox.top = tile.bottom
-        
+
         return hitbox
 
     def run(self):
@@ -150,9 +192,10 @@ class Game:
             if keys[pygame.K_j] and not keys[pygame.K_s] and not keys[pygame.K_f]:
                 self.animationStage = 0
                 self.currentAnimation = "attack"
-            
 
-            self.playerYVelocity = min(self.player_terminal_velocity, self.playerYVelocity + 0.12)
+            self.playerYVelocity = min(
+                self.player_terminal_velocity, self.playerYVelocity + 0.12
+            )
 
             if self.playerAirborne:
                 if self.playerYVelocity < 0:
@@ -160,23 +203,28 @@ class Game:
                 else:
                     self.currentAnimation = "falling"
 
-
             # find where the player is and what tiles are closest to the player
             player_tile = (int(self.player_rect.x // 16), int(self.player_rect.y // 16))
             nearby_tiles: List[Tuple[int, int]] = []
             for i in OFFSET:
                 nearby_tiles.append((player_tile[0] + i[0], player_tile[1] + i[1]))
-            
+
             # create hitboxes for the tiles that are terrain and are close to the player
             nearby_rects: List[pygame.Rect] = []
             for i in nearby_tiles:
                 if i in map["grass"]:
                     nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
 
-            player_coord = self.move_player(self.player_rect, (player_x_movement, self.playerYVelocity), nearby_rects)
+            player_coord = self.move_player(
+                self.player_rect,
+                (player_x_movement, self.playerYVelocity),
+                nearby_rects,
+            )
 
             # stuff to render
-            player_surf = self.player_animations[self.currentAnimation][self.animationStage // 5]
+            player_surf = self.player_animations[self.currentAnimation][
+                self.animationStage // 5
+            ]
 
             # special rendering for attack
             if self.currentAnimation == "attack":
@@ -194,6 +242,16 @@ class Game:
             else:
                 self.animationStage += 1
 
+            col = pygame.Color(115, 62, 239)
+            s = pygame.Surface((20, 20))
+
+            if self.currentAnimation == "attack" and self.animationStage == 15:
+                print("boom", self.projectiles)
+                if self.lastDirection == "right":
+                    self.projectiles.append(Projectile(s, [self.player_rect.right, self.player_rect.y + 8], [2.5, 0], 3, col))
+                elif self.lastDirection == "left":
+                    self.projectiles.append(Projectile(s, [self.player_rect.left, self.player_rect.y + 8], [-2.5, 0], 3, col))
+
             # idle animation
             if (
                 not self.playerAirborne
@@ -206,8 +264,11 @@ class Game:
             self.canvas.fill("gray")
             self.canvas.blit(self.map.render(self.canvas), (0, 0))
             self.canvas.blit(player_surf, player_coord)
+            for p in self.projectiles:
+                p.loc[0] += p.velocity[0]
+                p.loc[1] += p.velocity[1]
+                pygame.draw.circle(self.canvas, p.color, p.loc, p.radius)
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
-
 
             # refresh the screen
             pygame.display.update()
