@@ -30,7 +30,7 @@ map: Dict[str, List[Tuple[int, int]]] = {
         (17, 10),
         (18, 10),
         (19, 10),
-        (6, 6),
+        (14, 6),
         (8, 8),
     ]
 }
@@ -171,7 +171,7 @@ class Game:
             player_x_movement = 0
             keys = pygame.key.get_pressed()
             if keys[pygame.K_SPACE] and not self.playerAirborne:
-                self.playerYVelocity -= 3
+                self.playerYVelocity = -3
                 self.playerAirborne = True
             if keys[pygame.K_d] and self.playerAirborne:
                 self.playerYVelocity += 0.1
@@ -242,15 +242,15 @@ class Game:
             else:
                 self.animationStage += 1
 
-            col = pygame.Color(115, 62, 239)
-            s = pygame.Surface((20, 20))
+            # handle casting an attack spell
+            spell_color = pygame.Color(115, 62, 239)
+            projectile_surface = pygame.Surface((20, 20))
 
             if self.currentAnimation == "attack" and self.animationStage == 15:
-                print("boom", self.projectiles)
                 if self.lastDirection == "right":
-                    self.projectiles.append(Projectile(s, [self.player_rect.right, self.player_rect.y + 8], [2.5, 0], 3, col))
+                    self.projectiles.append(Projectile(projectile_surface, [self.player_rect.right, self.player_rect.y + 8], [2.8, 0], 3, spell_color))
                 elif self.lastDirection == "left":
-                    self.projectiles.append(Projectile(s, [self.player_rect.left, self.player_rect.y + 8], [-2.5, 0], 3, col))
+                    self.projectiles.append(Projectile(projectile_surface, [self.player_rect.left, self.player_rect.y + 8], [-2.8, 0], 3, spell_color))
 
             # idle animation
             if (
@@ -264,12 +264,23 @@ class Game:
             self.canvas.fill("gray")
             self.canvas.blit(self.map.render(self.canvas), (0, 0))
             self.canvas.blit(player_surf, player_coord)
-            for p in self.projectiles:
+            # render projectiles
+            for i, p in enumerate(self.projectiles):
+                if p.loc[0] < 0 or p.loc[0] > self.canvas_width:
+                    p.despawn_mark = True
+
                 p.loc[0] += p.velocity[0]
                 p.loc[1] += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, p.loc, p.radius)
+
+            # scale canvas to screen
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
+            # despawn projectiles
+            for i, p in enumerate(self.projectiles):
+                if p.despawn_mark == True:
+                    del self.projectiles[i]
+            
             # refresh the screen
             pygame.display.update()
 

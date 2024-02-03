@@ -15,3 +15,4 @@ class Projectile:
         self.velocity = velocity
         self.color = color
         self.radius = radius
+        self.despawn_mark = False
