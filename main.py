@@ -80,7 +80,7 @@ class Game:
         self.player_terminal_velocity = 5
         self.playerYVelocity = 0
         self.playerXVelocity = 0
-        self.playerAirborne = True
+        self.player_airtime = 0
         self.lastDirection = "right"
         self.currentAnimation = "idle"
         self.animationStage = 0
@@ -141,13 +141,16 @@ class Game:
         movement: Tuple[float, float],
         tiles: List[pygame.Rect],
     ):
+        collision_types = {"top": False, "bottom": False, "right": False, "left": False}
         hitbox.x += movement[0]
         collisions = self.collision_test(hitbox, tiles)
         for tile in collisions:
             if movement[0] > 0:
                 hitbox.right = tile.left
+                collision_types["right"] = True
             elif movement[0] < 0:
                 hitbox.left = tile.right
+                collision_types["left"] = True
 
         hitbox.y += movement[1]
         collisions = self.collision_test(hitbox, tiles)
@@ -155,11 +158,13 @@ class Game:
             if movement[1] > 0:
                 hitbox.bottom = tile.top
                 self.playerYVelocity = 0
-                self.playerAirborne = False
+                collision_types["bottom"] = True
             elif movement[1] < 0:
                 hitbox.top = tile.bottom
+                self.playerYVelocity = 0
+                collision_types["top"] = True
 
-        return hitbox
+        return hitbox, collision_types
 
     def run(self):
         while True:
@@ -170,38 +175,31 @@ class Game:
 
             player_x_movement = 0
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_SPACE] and not self.playerAirborne:
-                self.playerYVelocity = -3
-                self.playerAirborne = True
-            if keys[pygame.K_d] and self.playerAirborne:
+            if keys[pygame.K_SPACE] and self.player_airtime < 6 and self.playerYVelocity >= 0:
+                self.playerYVelocity = -3.5
+            if keys[pygame.K_d] and self.player_airtime > 0:
                 self.playerYVelocity += 0.1
             if keys[pygame.K_s]:
                 self.lastDirection = "left"
                 # ensure player doesn't run off screen
                 if self.player_rect.x > 0:
                     player_x_movement -= 2
-                    if not self.playerAirborne:
+                    if self.player_airtime == 0:
                         self.currentAnimation = "run"
             if keys[pygame.K_f]:
                 self.lastDirection = "right"
                 # ensure player doesn't run off screen
                 if self.player_rect.x < (self.canvas_width - self.player_size):
                     player_x_movement += 2
-                    if not self.playerAirborne:
+                    if self.player_airtime == 0: 
                         self.currentAnimation = "run"
             if keys[pygame.K_j] and not keys[pygame.K_s] and not keys[pygame.K_f]:
                 self.animationStage = 0
                 self.currentAnimation = "attack"
 
             self.playerYVelocity = min(
-                self.player_terminal_velocity, self.playerYVelocity + 0.12
+                self.player_terminal_velocity, self.playerYVelocity + 0.2
             )
-
-            if self.playerAirborne:
-                if self.playerYVelocity < 0:
-                    self.currentAnimation = "rising"
-                else:
-                    self.currentAnimation = "falling"
 
             # find where the player is and what tiles are closest to the player
             player_tile = (int(self.player_rect.x // 16), int(self.player_rect.y // 16))
@@ -215,11 +213,22 @@ class Game:
                 if i in map["grass"]:
                     nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
 
-            player_coord = self.move_player(
+            player_coord, collisions = self.move_player(
                 self.player_rect,
                 (player_x_movement, self.playerYVelocity),
                 nearby_rects,
             )
+
+            if collisions["bottom"] == True:
+                self.player_airtime = 0
+            else:
+                self.player_airtime += 1
+
+            if self.player_airtime > 6:
+                if self.playerYVelocity < 0:
+                    self.currentAnimation = "rising"
+                if self.playerYVelocity > 0:
+                    self.currentAnimation = "falling"
 
             # stuff to render
             player_surf = self.player_animations[self.currentAnimation][
@@ -248,14 +257,29 @@ class Game:
 
             if self.currentAnimation == "attack" and self.animationStage == 15:
                 if self.lastDirection == "right":
-                    self.projectiles.append(Projectile(projectile_surface, [self.player_rect.right, self.player_rect.y + 8], [2.8, 0], 3, spell_color))
+                    self.projectiles.append(
+                        Projectile(
+                            projectile_surface,
+                            [self.player_rect.right, self.player_rect.y + 8],
+                            [2.5, 0],
+                            3,
+                            spell_color,
+                        )
+                    )
                 elif self.lastDirection == "left":
-                    self.projectiles.append(Projectile(projectile_surface, [self.player_rect.left, self.player_rect.y + 8], [-2.8, 0], 3, spell_color))
+                    self.projectiles.append(
+                        Projectile(
+                            projectile_surface,
+                            [self.player_rect.left, self.player_rect.y + 8],
+                            [-2.5, 0],
+                            3,
+                            spell_color,
+                        )
+                    )
 
             # idle animation
             if (
-                not self.playerAirborne
-                and self.playerYVelocity == 0
+                self.playerYVelocity == 0
                 and self.currentAnimation != "attack"
             ):
                 self.currentAnimation = "idle"
@@ -272,6 +296,7 @@ class Game:
                 p.loc[0] += p.velocity[0]
                 p.loc[1] += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, p.loc, p.radius)
+                # self.canvas.blit(self.basic_spell, p.loc)
 
             # scale canvas to screen
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
@@ -280,7 +305,7 @@ class Game:
             for i, p in enumerate(self.projectiles):
                 if p.despawn_mark == True:
                     del self.projectiles[i]
-            
+
             # refresh the screen
             pygame.display.update()
 
