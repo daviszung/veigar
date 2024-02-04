@@ -1,6 +1,6 @@
 import pygame
 
-BASE_ASSET_PATH = "assets/mage/"
+BASE_ASSET_PATH = "assets/"
 
 BASE_AUDIO_ASSET_PATH = "assets/audio/"
 

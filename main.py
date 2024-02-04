@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 from scripts.utils import load_img
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
+from scripts.enemy import Enemy
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
@@ -30,8 +31,6 @@ map: Dict[str, List[Tuple[int, int]]] = {
         (17, 10),
         (18, 10),
         (19, 10),
-        (14, 6),
-        (8, 8),
     ]
 }
 
@@ -73,10 +72,10 @@ class Game:
         self.projectiles: List[Projectile] = []
 
         # player
-        self.player = load_img("Idle/Idle1.png")
+        self.player = load_img("/mage/Idle/Idle1.png")
         self.player.set_colorkey((0, 0, 0))
         self.player_size = 16
-        self.player_rect = pygame.Rect(0, 0, self.player_size, self.player_size)
+        self.player_rect = pygame.Rect(50, 144, self.player_size, self.player_size)
         self.player_terminal_velocity = 5
         self.playerYVelocity = 0
         self.playerXVelocity = 0
@@ -87,46 +86,74 @@ class Game:
 
         self.player_animations = {
             "idle": [
-                load_img("Idle/Idle1.png"),
-                load_img("Idle/Idle2.png"),
-                load_img("Idle/Idle3.png"),
-                load_img("Idle/Idle4.png"),
-                load_img("Idle/Idle5.png"),
-                load_img("Idle/Idle6.png"),
+                load_img("mage/Idle/Idle1.png"),
+                load_img("mage/Idle/Idle2.png"),
+                load_img("mage/Idle/Idle3.png"),
+                load_img("mage/Idle/Idle4.png"),
+                load_img("mage/Idle/Idle5.png"),
+                load_img("mage/Idle/Idle6.png"),
             ],
             "run": [
-                load_img("Run/Run1.png"),
-                load_img("Run/Run2.png"),
-                load_img("Run/Run3.png"),
-                load_img("Run/Run4.png"),
-                load_img("Run/Run5.png"),
-                load_img("Run/Run6.png"),
+                load_img("mage/Run/Run1.png"),
+                load_img("mage/Run/Run2.png"),
+                load_img("mage/Run/Run3.png"),
+                load_img("mage/Run/Run4.png"),
+                load_img("mage/Run/Run5.png"),
+                load_img("mage/Run/Run6.png"),
             ],
             "falling": [
-                load_img("Falling/Falling1.png"),
-                load_img("Falling/Falling2.png"),
-                load_img("Falling/Falling3.png"),
-                load_img("Falling/Falling4.png"),
-                load_img("Falling/Falling5.png"),
-                load_img("Falling/Falling6.png"),
+                load_img("mage/Falling/Falling1.png"),
+                load_img("mage/Falling/Falling2.png"),
+                load_img("mage/Falling/Falling3.png"),
+                load_img("mage/Falling/Falling4.png"),
+                load_img("mage/Falling/Falling5.png"),
+                load_img("mage/Falling/Falling6.png"),
             ],
             "rising": [
-                load_img("Rising/Rising1.png"),
-                load_img("Rising/Rising2.png"),
-                load_img("Rising/Rising3.png"),
-                load_img("Rising/Rising4.png"),
-                load_img("Rising/Rising5.png"),
-                load_img("Rising/Rising6.png"),
+                load_img("mage/Rising/Rising1.png"),
+                load_img("mage/Rising/Rising2.png"),
+                load_img("mage/Rising/Rising3.png"),
+                load_img("mage/Rising/Rising4.png"),
+                load_img("mage/Rising/Rising5.png"),
+                load_img("mage/Rising/Rising6.png"),
             ],
             "attack": [
-                load_img("Attack/StaffWood/AttackWood1.png"),
-                load_img("Attack/StaffWood/AttackWood2.png"),
-                load_img("Attack/StaffWood/AttackWood3.png"),
-                load_img("Attack/StaffWood/AttackWood4.png"),
-                load_img("Attack/StaffWood/AttackWood5.png"),
-                load_img("Attack/StaffWood/AttackWood6.png"),
+                load_img("mage/Attack/StaffWood/AttackWood1.png"),
+                load_img("mage/Attack/StaffWood/AttackWood2.png"),
+                load_img("mage/Attack/StaffWood/AttackWood3.png"),
+                load_img("mage/Attack/StaffWood/AttackWood4.png"),
+                load_img("mage/Attack/StaffWood/AttackWood5.png"),
+                load_img("mage/Attack/StaffWood/AttackWood6.png"),
             ],
         }
+
+        chort_animations = {
+            "run": [
+                load_img("frames/chort_run_anim_f0.png"),
+                load_img("frames/chort_run_anim_f1.png"),
+                load_img("frames/chort_run_anim_f2.png"),
+                load_img("frames/chort_run_anim_f3.png"),
+            ]
+        }
+
+        imp_animations = {
+            "idle": [
+                load_img("frames/imp_idle_anim_f0.png"),
+                load_img("frames/imp_idle_anim_f1.png"),
+                load_img("frames/imp_idle_anim_f2.png"),
+                load_img("frames/imp_idle_anim_f3.png"),
+
+            ],
+            "run": [
+                load_img("frames/imp_run_anim_f0.png"),
+                load_img("frames/imp_run_anim_f1.png"),
+                load_img("frames/imp_run_anim_f2.png"),
+                load_img("frames/imp_run_anim_f3.png"),
+            ]
+        }
+
+
+        self.enemy = Enemy("imp", imp_animations, 20, 10, [150, 144])
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
@@ -296,7 +323,9 @@ class Game:
                 p.loc[0] += p.velocity[0]
                 p.loc[1] += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, p.loc, p.radius)
-                # self.canvas.blit(self.basic_spell, p.loc)
+
+            self.enemy.update_animation()
+            self.enemy.render(self.canvas)
 
             # scale canvas to screen
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
