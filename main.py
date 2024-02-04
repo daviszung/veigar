@@ -7,6 +7,7 @@ from scripts.utils import load_img
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
 from scripts.enemy import Enemy
+from scripts.hud import Hud
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
@@ -68,6 +69,13 @@ class Game:
         self.platform = sheet.subsurface(128, 80, 16, 16).convert()
 
         self.map = Tilemap(map, self.platform)
+
+        hud_images = {
+            "heart": load_img("frames/ui_heart_full.png"),
+            "empty_heart": load_img("frames/ui_heart_empty.png"),
+        }
+
+        self.hud = Hud(hud_images)
 
         self.projectiles: List[Projectile] = []
 
@@ -142,16 +150,14 @@ class Game:
                 load_img("frames/imp_idle_anim_f1.png"),
                 load_img("frames/imp_idle_anim_f2.png"),
                 load_img("frames/imp_idle_anim_f3.png"),
-
             ],
             "run": [
                 load_img("frames/imp_run_anim_f0.png"),
                 load_img("frames/imp_run_anim_f1.png"),
                 load_img("frames/imp_run_anim_f2.png"),
                 load_img("frames/imp_run_anim_f3.png"),
-            ]
+            ],
         }
-
 
         self.enemy = Enemy("imp", imp_animations, 20, 10, [150, 144])
 
@@ -202,7 +208,11 @@ class Game:
 
             player_x_movement = 0
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_SPACE] and self.player_airtime < 6 and self.playerYVelocity >= 0:
+            if (
+                keys[pygame.K_SPACE]
+                and self.player_airtime < 6
+                and self.playerYVelocity >= 0
+            ):
                 self.playerYVelocity = -3.5
             if keys[pygame.K_d] and self.player_airtime > 0:
                 self.playerYVelocity += 0.1
@@ -218,7 +228,7 @@ class Game:
                 # ensure player doesn't run off screen
                 if self.player_rect.x < (self.canvas_width - self.player_size):
                     player_x_movement += 2
-                    if self.player_airtime == 0: 
+                    if self.player_airtime == 0:
                         self.currentAnimation = "run"
             if keys[pygame.K_j] and not keys[pygame.K_s] and not keys[pygame.K_f]:
                 self.animationStage = 0
@@ -305,15 +315,14 @@ class Game:
                     )
 
             # idle animation
-            if (
-                self.playerYVelocity == 0
-                and self.currentAnimation != "attack"
-            ):
+            if self.playerYVelocity == 0 and self.currentAnimation != "attack":
                 self.currentAnimation = "idle"
 
             # finally... render
             self.canvas.fill("gray")
             self.canvas.blit(self.map.render(self.canvas), (0, 0))
+            self.hud.update(0)
+            self.canvas.blit(self.hud.surf, (4, 4))
             self.canvas.blit(player_surf, player_coord)
             # render projectiles
             for i, p in enumerate(self.projectiles):
