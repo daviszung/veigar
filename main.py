@@ -78,6 +78,7 @@ class Game:
         self.hud = Hud(hud_images)
 
         self.projectiles: List[Projectile] = []
+        self.enemies: List[Enemy] = []
 
         # player
         self.player = load_img("/mage/Idle/Idle1.png")
@@ -133,15 +134,6 @@ class Game:
                 load_img("mage/Attack/StaffWood/AttackWood5.png"),
                 load_img("mage/Attack/StaffWood/AttackWood6.png"),
             ],
-        }
-
-        chort_animations = {
-            "run": [
-                load_img("frames/chort_run_anim_f0.png"),
-                load_img("frames/chort_run_anim_f1.png"),
-                load_img("frames/chort_run_anim_f2.png"),
-                load_img("frames/chort_run_anim_f3.png"),
-            ]
         }
 
         imp_animations = {
