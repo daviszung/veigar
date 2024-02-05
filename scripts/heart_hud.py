@@ -12,7 +12,7 @@ class HeartHud:
         self.hearts += heart_modifier
         self.surf.fill("gray")
         for i in range(self.max_hearts):
-            if self.hearts >= i:
+            if self.hearts >= i + 1:
                 self.surf.blit(self.images["heart"], (i * 16, 0))
             else:
                 self.surf.blit(self.images["empty_heart"], (i * 16, 0))

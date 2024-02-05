@@ -80,6 +80,7 @@ class Game:
             "malice": load_img("purple_sphere.png")
         }
 
+        # initialize huds and do a single render
         self.heart_hud = HeartHud(heart_hud_images)
         self.heart_hud.update(0)
         self.malice_hud = MaliceHud(malice_hud_images)
