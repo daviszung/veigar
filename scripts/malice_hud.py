@@ -16,4 +16,4 @@ class MaliceHud:
         self.surf.fill("gray")
         self.surf.blit(self.images["malice"], (0, 0))
         text = self.font.render(str(self.malice), False, (0, 0, 0))
-        self.surf.blit(text, (20, 3))
+        self.surf.blit(text, (20, 2))

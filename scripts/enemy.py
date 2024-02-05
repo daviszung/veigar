@@ -1,11 +1,9 @@
 import pygame
 from typing import List, Dict
 
-# from scripts.utils import load_img
-
 
 class Enemy:
-    def __init__(self, type: str, animations: Dict[str, List[pygame.Surface]], animation_change_rate: int, max_hp: int, loc: List[int]):
+    def __init__(self, type: str, animations: Dict[str, List[pygame.Surface]], animation_change_rate: int, max_hp: int, rect: pygame.Rect):
         self.type = type
         self.animations = animations
         self.animation_change_rate = animation_change_rate
@@ -14,7 +12,7 @@ class Enemy:
         self.animation_stage = 0
         self.max_hp = max_hp
         self.hp = max_hp
-        self.loc = loc
+        self.rect = rect
 
     def update_animation(self):
         if self.animation_timer <= 0:
@@ -30,5 +28,5 @@ class Enemy:
 
     def render(self, surf: pygame.Surface):
         animation = self.animations[self.current_animation][self.animation_stage]
-        surf.blit(animation, (self.loc[0], self.loc[1]))
+        surf.blit(animation, (self.rect.x, self.rect.y))
 
