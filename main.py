@@ -7,7 +7,8 @@ from scripts.utils import load_img
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
 from scripts.enemy import Enemy
-from scripts.hud import Hud
+from scripts.heart_hud import HeartHud
+from scripts.malice_hud import MaliceHud
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
@@ -70,12 +71,19 @@ class Game:
 
         self.map = Tilemap(map, self.platform)
 
-        hud_images = {
+        heart_hud_images = {
             "heart": load_img("frames/ui_heart_full.png"),
             "empty_heart": load_img("frames/ui_heart_empty.png"),
         }
 
-        self.hud = Hud(hud_images)
+        malice_hud_images = {
+            "malice": load_img("purple_sphere.png")
+        }
+
+        self.heart_hud = HeartHud(heart_hud_images)
+        self.heart_hud.update(0)
+        self.malice_hud = MaliceHud(malice_hud_images)
+        self.malice_hud.update(0)
 
         self.projectiles: List[Projectile] = []
         self.enemies: List[Enemy] = []
@@ -313,8 +321,8 @@ class Game:
             # finally... render
             self.canvas.fill("gray")
             self.canvas.blit(self.map.render(self.canvas), (0, 0))
-            self.hud.update(0)
-            self.canvas.blit(self.hud.surf, (4, 4))
+            self.canvas.blit(self.malice_hud.surf, (270, 2))
+            self.canvas.blit(self.heart_hud.surf, (4, 4))
             self.canvas.blit(player_surf, player_coord)
             # render projectiles
             for i, p in enumerate(self.projectiles):
