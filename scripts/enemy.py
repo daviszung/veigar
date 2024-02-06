@@ -1,32 +1,23 @@
 import pygame
-from typing import List, Dict
+from scripts.utils import load_images
+from scripts.animation import Animation
 
 
 class Enemy:
-    def __init__(self, type: str, animations: Dict[str, List[pygame.Surface]], animation_change_rate: int, max_hp: int, rect: pygame.Rect):
+    def __init__(self, type: str, max_hp: int, rect: pygame.Rect):
         self.type = type
-        self.animations = animations
-        self.animation_change_rate = animation_change_rate
-        self.animation_timer = self.animation_change_rate
-        self.current_animation = "idle"
+        self.animations = {
+            "imp": {
+                "idle": Animation(load_images("frames/imp/idle"), 8, loop = True),
+                "run": Animation(load_images("frames/imp/run"), 4, loop = True),
+            }
+        }
+        self.action = "idle"
         self.animation_stage = 0
         self.max_hp = max_hp
         self.hp = max_hp
         self.rect = rect
 
-    def update_animation(self):
-        if self.animation_timer <= 0:
-            if self.animation_stage >= 3:
-                self.animation_stage = 0
-            else:
-                self.animation_stage += 1
-            self.animation_timer = self.animation_change_rate
-
-        else:
-            self.animation_timer -= 1
-
-
-    def render(self, surf: pygame.Surface):
-        animation = self.animations[self.current_animation][self.animation_stage]
-        surf.blit(animation, (self.rect.x, self.rect.y))
+    def update(self):
+        self.animations[self.type][self.action].update()
 

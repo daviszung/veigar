@@ -77,23 +77,6 @@ class Game:
 
         self.projectiles: List[Projectile] = []
 
-        self.assets = {
-            "imp_animations": {
-                "idle": [
-                    load_img("frames/imp_idle_anim_f0.png"),
-                    load_img("frames/imp_idle_anim_f1.png"),
-                    load_img("frames/imp_idle_anim_f2.png"),
-                    load_img("frames/imp_idle_anim_f3.png"),
-                ],
-                "run": [
-                    load_img("frames/imp_run_anim_f0.png"),
-                    load_img("frames/imp_run_anim_f1.png"),
-                    load_img("frames/imp_run_anim_f2.png"),
-                    load_img("frames/imp_run_anim_f3.png"),
-                ],
-            },
-        }
-
         heart_hud_images = {
             "heart": load_img("frames/ui_heart_full.png"),
             "empty_heart": load_img("frames/ui_heart_empty.png"),
@@ -110,9 +93,7 @@ class Game:
         self.enemies: List[Enemy] = [
             Enemy(
                 "imp",
-                self.assets["imp_animations"],
                 20,
-                10,
                 pygame.Rect(150, 144, 16, 16),
             ),
         ]
@@ -295,10 +276,10 @@ class Game:
             self.canvas.blit(self.heart_hud.surf, (4, 4))
             self.canvas.blit(player_surf, player_coord)
             for enemy in self.enemies:
-                enemy.update_animation()
+                enemy.update()
                 self.canvas.blit(
-                    enemy.animations[enemy.current_animation][enemy.animation_stage],
-                    enemy.rect,
+                    enemy.animations[enemy.type][enemy.action].img(),
+                    enemy.rect
                 )
             # render projectiles
             for i, p in enumerate(self.projectiles):
