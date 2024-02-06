@@ -11,7 +11,7 @@ class Projectile:
         color: pygame.Color
     ):
         self.surf = surf
-        self.loc = loc
+        self.rect = pygame.Rect((loc[0], loc[1]), (8, 8))
         self.velocity = velocity
         self.color = color
         self.radius = radius

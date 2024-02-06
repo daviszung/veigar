@@ -17,6 +17,7 @@ class Enemy:
         self.max_hp = max_hp
         self.hp = max_hp
         self.rect = rect
+        self.despawn_mark = False
 
     def update(self):
         self.animations[self.type][self.action].update()

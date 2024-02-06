@@ -75,6 +75,8 @@ class Game:
 
         self.map = Tilemap(map, self.platform)
 
+        self.player = Player()
+
         self.projectiles: List[Projectile] = []
 
         heart_hud_images = {
@@ -88,17 +90,16 @@ class Game:
         self.heart_hud = HeartHud(heart_hud_images)
         self.heart_hud.update(0)
         self.malice_hud = MaliceHud(malice_hud_images)
-        self.malice_hud.update(0)
+        self.malice_hud.update(self.player.malice)
 
         self.enemies: List[Enemy] = [
             Enemy(
                 "imp",
-                20,
+                5,
                 pygame.Rect(150, 144, 16, 16),
             ),
         ]
 
-        self.player = Player()
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
@@ -252,6 +253,17 @@ class Game:
                             spell_color,
                         )
                     )
+            
+            for projectile in self.projectiles:
+                for enemy in self.enemies:
+                    if projectile.rect.colliderect(enemy.rect):
+                        enemy.hp -= self.player.malice + 1
+                        if enemy.hp <= 0:
+                            enemy.despawn_mark = True
+                            self.player.malice += 1
+                            self.malice_hud.update(self.player.malice)
+                        projectile.despawn_mark = True
+                        
 
             # enemy collision detection
             for enemy in self.enemies:
@@ -277,18 +289,19 @@ class Game:
             self.canvas.blit(player_surf, player_coord)
             for enemy in self.enemies:
                 enemy.update()
+                # enemy_surf = enemy.animations[enemy.type][enemy.action].img()
                 self.canvas.blit(
                     enemy.animations[enemy.type][enemy.action].img(),
                     enemy.rect
                 )
             # render projectiles
             for i, p in enumerate(self.projectiles):
-                if p.loc[0] < 0 or p.loc[0] > self.canvas_width:
+                if p.rect.x < 0 or p.rect.x > self.canvas_width:
                     p.despawn_mark = True
 
-                p.loc[0] += p.velocity[0]
-                p.loc[1] += p.velocity[1]
-                pygame.draw.circle(self.canvas, p.color, p.loc, p.radius)
+                p.rect.x += p.velocity[0]
+                p.rect.y += p.velocity[1]
+                pygame.draw.circle(self.canvas, p.color, (p.rect.x, p.rect.y), p.radius)
 
             # scale canvas to screen
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
@@ -297,6 +310,10 @@ class Game:
             for i, p in enumerate(self.projectiles):
                 if p.despawn_mark == True:
                     del self.projectiles[i]
+            
+            for i, e in enumerate(self.enemies):
+                if e.despawn_mark == True:
+                    del self.enemies[i]
 
             # refresh the screen
             pygame.display.update()

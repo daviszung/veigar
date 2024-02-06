@@ -25,6 +25,7 @@ class Player:
         self.flip = False
         self.action = "idle"
         self.controls_lock = False
+        self.malice = 0
 
     def update(self):
         if self.invincibility_frames > 0:

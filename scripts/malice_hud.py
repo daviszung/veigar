@@ -11,8 +11,8 @@ class MaliceHud:
         self.font = pygame.font.Font(None, 16)
         self.font.set_point_size(12)
 
-    def update(self, malice_modifier: int):
-        self.malice += malice_modifier
+    def update(self, malice: int):
+        self.malice = malice
         self.surf.fill("gray")
         self.surf.blit(self.images["malice"], (0, 0))
         text = self.font.render(str(self.malice), False, (0, 0, 0))
