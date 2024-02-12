@@ -14,4 +14,4 @@ class Tilemap():
             for coords in self.map[i]:
                 surf.blit(self.tile, (coords[0] * tile_size, coords[1] * tile_size))
 
-        return surf
+        # return surf

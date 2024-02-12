@@ -233,26 +233,19 @@ class Game:
                 self.player.action == "attack"
                 and self.player.images[self.player.action].frame == 25
             ):
-                if self.player.flip == False:
-                    self.projectiles.append(
-                        Projectile(
-                            projectile_surface,
-                            [self.player.hitbox.right, self.player.hitbox.y + 8],
-                            [2.5, 0],
-                            3,
-                            spell_color,
-                        )
+                projectile_info = [self.player.hitbox.right, 3]
+                if self.player.flip:
+                    projectile_info = [self.player.hitbox.left, -3]
+
+                self.projectiles.append(
+                    Projectile(
+                        projectile_surface,
+                        [projectile_info[0], self.player.hitbox.y + 8],
+                        [projectile_info[1], 0],
+                        3,
+                        spell_color,
                     )
-                elif self.player.flip:
-                    self.projectiles.append(
-                        Projectile(
-                            projectile_surface,
-                            [self.player.hitbox.left, self.player.hitbox.y + 8],
-                            [-2.5, 0],
-                            3,
-                            spell_color,
-                        )
-                    )
+                )
             
             for projectile in self.projectiles:
                 for enemy in self.enemies:
@@ -283,9 +276,7 @@ class Game:
 
             # finally... render
             self.canvas.fill("gray")
-            self.canvas.blit(self.map.render(self.canvas), (0, 0))
-            self.canvas.blit(self.malice_hud.surf, (270, 2))
-            self.canvas.blit(self.heart_hud.surf, (4, 4))
+            self.map.render(self.canvas)
             self.canvas.blit(player_surf, player_coord)
             for enemy in self.enemies:
                 enemy.update()
@@ -294,14 +285,21 @@ class Game:
                     enemy.animations[enemy.type][enemy.action].img(),
                     enemy.rect
                 )
+
             # render projectiles
             for i, p in enumerate(self.projectiles):
+                print(p.velocity, p.rect)
                 if p.rect.x < 0 or p.rect.x > self.canvas_width:
                     p.despawn_mark = True
 
                 p.rect.x += p.velocity[0]
                 p.rect.y += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, (p.rect.x, p.rect.y), p.radius)
+
+
+            # render HUDs
+            self.canvas.blit(self.malice_hud.surf, (270, 2))
+            self.canvas.blit(self.heart_hud.surf, (4, 4))
 
             # scale canvas to screen
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
@@ -311,6 +309,7 @@ class Game:
                 if p.despawn_mark == True:
                     del self.projectiles[i]
             
+            # despawn enemies
             for i, e in enumerate(self.enemies):
                 if e.despawn_mark == True:
                     del self.enemies[i]
