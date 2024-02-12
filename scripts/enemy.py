@@ -12,12 +12,15 @@ class Enemy:
                 "run": Animation(load_images("frames/imp/run"), 4, loop = True),
             }
         }
-        self.action = "idle"
+        self.action = "run"
         self.animation_stage = 0
         self.max_hp = max_hp
         self.hp = max_hp
         self.rect = rect
         self.despawn_mark = False
+        self.flip = False
+        self.y_velocity = 0
+        self.x_movement = 0
 
     def update(self):
         self.animations[self.type][self.action].update()

@@ -108,7 +108,7 @@ class Game:
                 collisions.append(tile)
         return collisions
 
-    def move_player(
+    def move(
         self,
         hitbox: pygame.Rect,
         movement: Tuple[float, float],
@@ -191,7 +191,7 @@ class Game:
                 if i in map["grass"]:
                     nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
 
-            player_coord, collisions = self.move_player(
+            player_coord, collisions = self.move(
                 self.player.hitbox,
                 (player_x_movement, self.player.y_velocity),
                 nearby_rects,
@@ -216,7 +216,7 @@ class Game:
             }:
                 self.player.action = "idle"
 
-            # stuff to render
+            # RENDERING
             self.player.update()
             player_surf = self.player.images[self.player.action].img()
 
@@ -247,6 +247,23 @@ class Game:
                     )
                 )
             
+            # move the enemies
+            for enemy in self.enemies:
+                if self.player.hitbox.x < enemy.rect.x:
+                    enemy.x_movement = -1
+                    enemy.flip = True
+                    enemy.action = "run"
+                elif self.player.hitbox.x > enemy.rect.x:
+                    enemy.x_movement = 1
+                    enemy.flip = False
+                    enemy.action = "run"
+                else:
+                    enemy.x_movement = 0
+                    enemy.action = "idle"
+
+                enemy.rect.x += enemy.x_movement
+            
+            # collision detect with attacks against enemies
             for projectile in self.projectiles:
                 for enemy in self.enemies:
                     if projectile.rect.colliderect(enemy.rect):
@@ -258,7 +275,7 @@ class Game:
                         projectile.despawn_mark = True
                         
 
-            # enemy collision detection
+            # collision detections with enemy hitting the player
             for enemy in self.enemies:
                 if (
                     enemy.rect.colliderect(self.player.hitbox)
@@ -280,9 +297,11 @@ class Game:
             self.canvas.blit(player_surf, player_coord)
             for enemy in self.enemies:
                 enemy.update()
-                # enemy_surf = enemy.animations[enemy.type][enemy.action].img()
+                enemy_surf = enemy.animations[enemy.type][enemy.action].img()
+                if enemy.flip:
+                    enemy_surf = pygame.transform.flip(enemy_surf, True, False)
                 self.canvas.blit(
-                    enemy.animations[enemy.type][enemy.action].img(),
+                    enemy_surf,
                     enemy.rect
                 )
 
