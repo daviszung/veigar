@@ -52,7 +52,7 @@ class Enemy:
 
         for enemy in other_enemies:
             if enemy != self and self.rect.colliderect(enemy.rect):
-                self.rect.y -= x_movement
+                self.rect.y -= self.y_velocity
 
         for tile in tiles:
             if self.rect.colliderect(tile):
