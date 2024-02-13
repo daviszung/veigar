@@ -34,6 +34,8 @@ map: Dict[str, List[Tuple[int, int]]] = {
         (17, 10),
         (18, 10),
         (19, 10),
+        (11, 8),
+        (5, 8)
     ]
 }
 
@@ -92,11 +94,20 @@ class Game:
         self.malice_hud = MaliceHud(malice_hud_images)
         self.malice_hud.update(self.player.malice)
 
+        self.enemy_id_count = 0
+
         self.enemies: List[Enemy] = [
             Enemy(
+                0,
                 "imp",
                 5,
-                pygame.Rect(150, 144, 16, 16),
+                pygame.Rect(150, 144, 12, 16),
+            ),
+            Enemy(
+                1,
+                "imp",
+                5,
+                pygame.Rect(165, 144, 12, 16),
             ),
         ]
 
@@ -157,7 +168,7 @@ class Game:
                     and self.player.airtime < 6
                     and self.player.y_velocity >= 0
                 ):
-                    self.player.y_velocity = -3.5
+                    self.player.y_velocity = -3.7
                 if keys[pygame.K_d] and self.player.airtime > 0:
                     self.player.y_velocity += 0.1
                 if keys[pygame.K_s]:
@@ -246,50 +257,44 @@ class Game:
                         spell_color,
                     )
                 )
+
             
             # move the enemies
             for enemy in self.enemies:
                 if self.player.hitbox.x < enemy.rect.x:
-                    enemy.x_movement = -1
                     enemy.flip = True
                     enemy.action = "run"
+                    enemy.move(-1, self.enemies)
                 elif self.player.hitbox.x > enemy.rect.x:
-                    enemy.x_movement = 1
                     enemy.flip = False
                     enemy.action = "run"
+                    enemy.move(1, self.enemies)
                 else:
                     enemy.x_movement = 0
                     enemy.action = "idle"
 
-                enemy.rect.x += enemy.x_movement
-            
-            # collision detect with attacks against enemies
-            for projectile in self.projectiles:
-                for enemy in self.enemies:
-                    if projectile.rect.colliderect(enemy.rect):
-                        enemy.hp -= self.player.malice + 1
-                        if enemy.hp <= 0:
-                            enemy.despawn_mark = True
-                            self.player.malice += 1
-                            self.malice_hud.update(self.player.malice)
-                        projectile.despawn_mark = True
-                        
-
-            # collision detections with enemy hitting the player
-            for enemy in self.enemies:
+                # collision detections with enemy hitting the player
                 if (
                     enemy.rect.colliderect(self.player.hitbox)
                     and self.player.invincibility_frames == 0
                 ):
-                    self.player.invincibility_frames = 60
+                    self.player.invincibility_frames = 90
                     self.heart_hud.update(-1)
                     self.player.action = "hit"
                     if self.heart_hud.hearts <= 0:
                         self.player.action = "dying"
                         self.player.controls_lock = True
-                    else:
-                        # knockback effect
-                        self.player.y_velocity -= 2
+            
+            # collision detect with attacks against enemies
+            for projectile in self.projectiles:
+                for enemy in self.enemies:
+                    if projectile.rect.colliderect(enemy.rect):
+                        enemy.hp -= (self.player.malice // 3) + 1
+                        if enemy.hp <= 0:
+                            enemy.despawn_mark = True
+                            self.player.malice += 1
+                            self.malice_hud.update(self.player.malice)
+                        projectile.despawn_mark = True
 
             # finally... render
             self.canvas.fill("gray")
@@ -307,7 +312,6 @@ class Game:
 
             # render projectiles
             for i, p in enumerate(self.projectiles):
-                print(p.velocity, p.rect)
                 if p.rect.x < 0 or p.rect.x > self.canvas_width:
                     p.despawn_mark = True
 
