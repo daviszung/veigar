@@ -36,7 +36,7 @@ map: Dict[str, List[Tuple[int, int]]] = {
         (18, 10),
         (19, 10),
         (11, 8),
-        (5, 8)
+        (5, 8),
     ]
 }
 
@@ -55,9 +55,6 @@ OFFSET = [
     (0, -1),
     (1, -1),
 ]
-
-spell_color = pygame.Color(115, 62, 239)
-projectile_surface = pygame.Surface((20, 20))
 
 
 class Game:
@@ -99,12 +96,12 @@ class Game:
 
         self.enemies: List[Enemy] = []
 
-
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
         for tile in tiles:
             if hitbox.colliderect(tile):
                 collisions.append(tile)
+        
         return collisions
 
     def move(
@@ -116,6 +113,7 @@ class Game:
         collision_types = {"top": False, "bottom": False, "right": False, "left": False}
         hitbox.x += movement[0]
         collisions = self.collision_test(hitbox, tiles)
+
         for tile in collisions:
             if movement[0] > 0:
                 hitbox.right = tile.left
@@ -125,7 +123,8 @@ class Game:
                 collision_types["left"] = True
 
         hitbox.y += movement[1]
-        collisions = self.collision_test(hitbox, tiles)
+        collisions = self.collision_test(hitbox, tiles) 
+        
         for tile in collisions:
             if movement[1] > 0:
                 hitbox.bottom = tile.top
@@ -137,6 +136,20 @@ class Game:
                 collision_types["top"] = True
 
         return hitbox, collision_types
+    
+    def getNearbyRects(self, rect: pygame.Rect):
+        nearby_tiles: List[Tuple[int, int]] = []
+        nearby_rects: List[pygame.Rect] = []
+
+        original_tile = (int(rect.x // 16), int(rect.y // 16))
+        for i in OFFSET:
+            nearby_tiles.append((original_tile[0] + i[0], original_tile[1] + i[1]))
+        
+        for i in nearby_tiles:
+            if i in map["grass"]:
+                nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
+        
+        return nearby_rects
 
     def run(self):
         while True:
@@ -175,25 +188,26 @@ class Game:
                     self.player.action = "attack"
                     self.player.images["attack"] = self.player.images["attack"].copy()
 
-            # find where the player is and what tiles are closest to the player
-            player_tile = (
-                int(self.player.hitbox.x // 16),
-                int(self.player.hitbox.y // 16),
-            )
-            nearby_tiles: List[Tuple[int, int]] = []
-            for i in OFFSET:
-                nearby_tiles.append((player_tile[0] + i[0], player_tile[1] + i[1]))
+            # # find where the player is and what tiles are closest to the player
+            # player_tile = (
+            #     int(self.player.hitbox.x // 16),
+            #     int(self.player.hitbox.y // 16),
+            # )
+            # nearby_tiles: List[Tuple[int, int]] = []
+            # for i in OFFSET:
+            #     nearby_tiles.append((player_tile[0] + i[0], player_tile[1] + i[1]))
 
-            # create hitboxes for the tiles that are terrain and are close to the player
-            nearby_rects: List[pygame.Rect] = []
-            for i in nearby_tiles:
-                if i in map["grass"]:
-                    nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
+            # # create hitboxes for the tiles that are terrain and are close to the player
+            # nearby_rects: List[pygame.Rect] = []
+            # for i in nearby_tiles:
+            #     if i in map["grass"]:
+            #         nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
+
 
             player_coord, collisions = self.move(
                 self.player.hitbox,
                 (player_x_movement, self.player.y_velocity),
-                nearby_rects,
+                self.getNearbyRects(self.player.hitbox),
             )
 
             if collisions["bottom"] == True:
@@ -201,6 +215,7 @@ class Game:
             else:
                 self.player.airtime += 1
 
+            # changing animation in air and factoring in coyote time
             if self.player.airtime > 6:
                 if self.player.y_velocity < 0:
                     self.player.action = "rising"
@@ -238,30 +253,30 @@ class Game:
 
                 self.projectiles.append(
                     Projectile(
-                        projectile_surface,
                         [projectile_info[0], self.player.hitbox.y + 8],
                         [projectile_info[1], 0],
-                        3,
-                        spell_color,
                     )
                 )
 
             # spawn new enemies randomly
             self.spawner.tick(self.enemies)
-            
+
             # move the enemies
             for enemy in self.enemies:
+                terrain_near_enemy = self.getNearbyRects(enemy.rect)
+
                 if self.player.hitbox.x < enemy.rect.x:
                     enemy.flip = True
                     enemy.action = "run"
-                    enemy.move(-1, self.enemies)
+                    enemy.move(-1, self.enemies, terrain_near_enemy)
                 elif self.player.hitbox.x > enemy.rect.x:
                     enemy.flip = False
                     enemy.action = "run"
-                    enemy.move(1, self.enemies)
+                    enemy.move(1, self.enemies, terrain_near_enemy)
                 else:
                     enemy.x_movement = 0
                     enemy.action = "idle"
+                    enemy.move(0, self.enemies, terrain_near_enemy)
 
                 # collision detections with enemy hitting the player
                 if (
@@ -274,7 +289,7 @@ class Game:
                     if self.heart_hud.hearts <= 0:
                         self.player.action = "dying"
                         self.player.controls_lock = True
-            
+
             # collision detect with attacks against enemies
             for projectile in self.projectiles:
                 for enemy in self.enemies:
@@ -289,16 +304,14 @@ class Game:
             # finally... render
             self.canvas.fill("gray")
             self.map.render(self.canvas)
-            self.canvas.blit(player_surf, player_coord)
             for enemy in self.enemies:
                 enemy.update()
                 enemy_surf = enemy.animations[enemy.type][enemy.action].img()
                 if enemy.flip:
                     enemy_surf = pygame.transform.flip(enemy_surf, True, False)
-                self.canvas.blit(
-                    enemy_surf,
-                    enemy.rect
-                )
+                self.canvas.blit(enemy_surf, enemy.rect)
+
+            self.canvas.blit(player_surf, player_coord)
 
             # render projectiles
             for i, p in enumerate(self.projectiles):
@@ -320,7 +333,7 @@ class Game:
             for i, p in enumerate(self.projectiles):
                 if p.despawn_mark == True:
                     del self.projectiles[i]
-            
+
             # despawn enemies
             for i, e in enumerate(self.enemies):
                 if e.despawn_mark == True:

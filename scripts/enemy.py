@@ -22,14 +22,46 @@ class Enemy:
         self.despawn_mark = False
         self.flip = False
         self.y_velocity = 0
+        self.terminal_velocity = 1
         self.x_movement = 0
 
     def update(self):
         self.animations[self.type][self.action].update()
     
-    def move(self, x_movement: int, other_enemies: List[Any]):
+    def move(self, x_movement: int, other_enemies: List[Any], tiles: List[pygame.Rect]):
+        collisions: List[pygame.Rect] = []
         self.rect.x += x_movement
 
         for enemy in other_enemies:
             if enemy != self and self.rect.colliderect(enemy.rect):
                 self.rect.x -= x_movement
+            
+        for tile in tiles:
+            if self.rect.colliderect(tile):
+                collisions.append(tile)
+    
+        for tile in collisions:
+            if x_movement > 0:
+                self.rect.right = tile.left
+            elif x_movement < 0:
+                self.rect.left = tile.right
+
+        self.y_velocity = min(self.terminal_velocity, self.y_velocity + 0.1)
+
+        self.rect.y += self.y_velocity
+
+        for enemy in other_enemies:
+            if enemy != self and self.rect.colliderect(enemy.rect):
+                self.rect.y -= x_movement
+
+        for tile in tiles:
+            if self.rect.colliderect(tile):
+                collisions.append(tile)
+    
+        for tile in collisions:
+            if self.y_velocity > 0:
+                self.rect.bottom = tile.top
+                self.y_velocity = 0
+            elif self.y_velocity < 0:
+                self.rect.top = tile.bottom
+
