@@ -7,6 +7,7 @@ from scripts.utils import load_img
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
 from scripts.enemy import Enemy
+from scripts.spawner import Spawner
 from scripts.heart_hud import HeartHud
 from scripts.malice_hud import MaliceHud
 from scripts.player import Player
@@ -94,22 +95,9 @@ class Game:
         self.malice_hud = MaliceHud(malice_hud_images)
         self.malice_hud.update(self.player.malice)
 
-        self.enemy_id_count = 0
+        self.spawner = Spawner()
 
-        self.enemies: List[Enemy] = [
-            Enemy(
-                0,
-                "imp",
-                5,
-                pygame.Rect(150, 144, 12, 16),
-            ),
-            Enemy(
-                1,
-                "imp",
-                5,
-                pygame.Rect(165, 144, 12, 16),
-            ),
-        ]
+        self.enemies: List[Enemy] = []
 
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
@@ -258,6 +246,8 @@ class Game:
                     )
                 )
 
+            # spawn new enemies randomly
+            self.spawner.tick(self.enemies)
             
             # move the enemies
             for enemy in self.enemies:
@@ -318,7 +308,6 @@ class Game:
                 p.rect.x += p.velocity[0]
                 p.rect.y += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, (p.rect.x, p.rect.y), p.radius)
-
 
             # render HUDs
             self.canvas.blit(self.malice_hud.surf, (270, 2))
