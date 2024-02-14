@@ -101,7 +101,7 @@ class Game:
         for tile in tiles:
             if hitbox.colliderect(tile):
                 collisions.append(tile)
-        
+
         return collisions
 
     def move(
@@ -123,8 +123,8 @@ class Game:
                 collision_types["left"] = True
 
         hitbox.y += movement[1]
-        collisions = self.collision_test(hitbox, tiles) 
-        
+        collisions = self.collision_test(hitbox, tiles)
+
         for tile in collisions:
             if movement[1] > 0:
                 hitbox.bottom = tile.top
@@ -136,7 +136,7 @@ class Game:
                 collision_types["top"] = True
 
         return hitbox, collision_types
-    
+
     def getNearbyRects(self, rect: pygame.Rect):
         nearby_tiles: List[Tuple[int, int]] = []
         nearby_rects: List[pygame.Rect] = []
@@ -144,11 +144,11 @@ class Game:
         original_tile = (int(rect.x // 16), int(rect.y // 16))
         for i in OFFSET:
             nearby_tiles.append((original_tile[0] + i[0], original_tile[1] + i[1]))
-        
+
         for i in nearby_tiles:
             if i in map["grass"]:
                 nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
-        
+
         return nearby_rects
 
     def run(self):
@@ -295,8 +295,12 @@ class Game:
                 if enemy.flip:
                     enemy_surf = pygame.transform.flip(enemy_surf, True, False)
                 self.canvas.blit(enemy_surf, enemy.rect)
-                pygame.draw.rect(self.canvas, "black", (enemy.rect.x, enemy.rect.y, 16, 1))
-                pygame.draw.rect(self.canvas, "red", (enemy.rect.x, enemy.rect.y, (16 * enemy.hp / enemy.max_hp) , 1))
+
+                # create an HP bar
+                hp_bar_surf = pygame.Surface((16, 1))
+                hp_bar_surf.fill("black")
+                pygame.draw.rect(hp_bar_surf, "red", (0, 0, (16 * enemy.hp / enemy.max_hp), 1))
+                self.canvas.blit(hp_bar_surf, enemy.rect)
 
             self.canvas.blit(player_surf, player_coord)
 
