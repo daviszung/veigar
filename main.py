@@ -295,6 +295,8 @@ class Game:
                 if enemy.flip:
                     enemy_surf = pygame.transform.flip(enemy_surf, True, False)
                 self.canvas.blit(enemy_surf, enemy.rect)
+                pygame.draw.rect(self.canvas, "black", (enemy.rect.x, enemy.rect.y, 16, 1))
+                pygame.draw.rect(self.canvas, "red", (enemy.rect.x, enemy.rect.y, (16 * enemy.hp / enemy.max_hp) , 1))
 
             self.canvas.blit(player_surf, player_coord)
 
