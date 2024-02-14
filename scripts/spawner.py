@@ -18,10 +18,14 @@ class Spawner:
     def tick(self, enemies: List[Enemy], malice: int):
         max_enemies = 1 + int(math.log(malice + 1, 2))
         self.timer += 1
+        if len(enemies) == 0 and self.timer % 60 == 0:
+            self.spawn_enemy("imp", 5, enemies)
+            return
+
         if (
             len(enemies) < max_enemies
             and self.timer % 60 == 0
-            and random.randint(1, 20 - max(malice, 2)) == 1
+            and random.randint(1, max(3, 30 - malice)) == 1
         ):
             self.spawn_enemy("imp", 5, enemies)
 

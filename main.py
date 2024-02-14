@@ -244,7 +244,7 @@ class Game:
                 )
 
             # spawn new enemies randomly
-            # self.spawner.tick(self.enemies, self.player.malice)
+            self.spawner.tick(self.enemies, self.player.malice)
 
             # move the enemies
             for enemy in self.enemies:
