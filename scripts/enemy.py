@@ -46,6 +46,8 @@ class Enemy:
             elif x_movement < 0:
                 self.rect.left = tile.right
 
+        collisions.clear()
+
         self.y_velocity = min(self.terminal_velocity, self.y_velocity + 0.1)
 
         self.rect.y += self.y_velocity

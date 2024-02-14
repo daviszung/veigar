@@ -188,22 +188,7 @@ class Game:
                     self.player.action = "attack"
                     self.player.images["attack"] = self.player.images["attack"].copy()
 
-            # # find where the player is and what tiles are closest to the player
-            # player_tile = (
-            #     int(self.player.hitbox.x // 16),
-            #     int(self.player.hitbox.y // 16),
-            # )
-            # nearby_tiles: List[Tuple[int, int]] = []
-            # for i in OFFSET:
-            #     nearby_tiles.append((player_tile[0] + i[0], player_tile[1] + i[1]))
-
-            # # create hitboxes for the tiles that are terrain and are close to the player
-            # nearby_rects: List[pygame.Rect] = []
-            # for i in nearby_tiles:
-            #     if i in map["grass"]:
-            #         nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
-
-
+            # move player
             player_coord, collisions = self.move(
                 self.player.hitbox,
                 (player_x_movement, self.player.y_velocity),
@@ -215,13 +200,6 @@ class Game:
             else:
                 self.player.airtime += 1
 
-            # changing animation in air and factoring in coyote time
-            if self.player.airtime > 6:
-                if self.player.y_velocity < 0:
-                    self.player.action = "rising"
-                if self.player.y_velocity > 0:
-                    self.player.action = "falling"
-
             # check for idling
             if player_x_movement == 0 and self.player.action not in {
                 "attack",
@@ -229,6 +207,13 @@ class Game:
                 "dying",
             }:
                 self.player.action = "idle"
+
+            # changing animation in air and factoring in coyote time
+            if self.player.airtime > 6:
+                if self.player.y_velocity < 0:
+                    self.player.action = "rising"
+                if self.player.y_velocity > 0:
+                    self.player.action = "falling"
 
             # RENDERING
             self.player.update()
@@ -259,7 +244,7 @@ class Game:
                 )
 
             # spawn new enemies randomly
-            self.spawner.tick(self.enemies)
+            # self.spawner.tick(self.enemies, self.player.malice)
 
             # move the enemies
             for enemy in self.enemies:
