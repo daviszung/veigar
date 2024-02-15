@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 from typing import Dict, List, Tuple
 
@@ -11,6 +12,7 @@ from scripts.spawner import Spawner
 from scripts.heart_hud import HeartHud
 from scripts.malice_hud import MaliceHud
 from scripts.player import Player
+from scripts.particle import Particle
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
@@ -74,6 +76,8 @@ class Game:
         self.platform = sheet.subsurface(128, 80, 16, 16).convert()
 
         self.map = Tilemap(map, self.platform)
+
+        self.particles: List[Particle] = []
 
         self.player = Player()
 
@@ -282,6 +286,9 @@ class Game:
                         enemy.hp -= (self.player.malice // 3) + 1
                         if enemy.hp <= 0:
                             enemy.despawn_mark = True
+                            for i in range(10):
+                                self.particles.append(Particle([enemy.rect.x + 8, enemy.rect.y + 8], [random.randint(-3, 3), random.randint(-3, 3)], random.randint(2, 4), pygame.Color(random.randint(0, 255),random.randint(0, 255), random.randint(0, 255))))
+                            
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
                         projectile.despawn_mark = True
@@ -289,6 +296,12 @@ class Game:
             # finally... render
             self.canvas.fill("gray")
             self.map.render(self.canvas)
+
+            # render particles
+            for particle in self.particles:
+                particle.update()
+                pygame.draw.circle(self.canvas, particle.color, particle.loc, particle.timer)
+
             for enemy in self.enemies:
                 enemy.update()
                 enemy_surf = enemy.animations[enemy.type][enemy.action].img()
@@ -299,7 +312,9 @@ class Game:
                 # create an HP bar
                 hp_bar_surf = pygame.Surface((16, 1))
                 hp_bar_surf.fill("black")
-                pygame.draw.rect(hp_bar_surf, "red", (0, 0, (16 * enemy.hp / enemy.max_hp), 1))
+                pygame.draw.rect(
+                    hp_bar_surf, "red", (0, 0, (16 * enemy.hp / enemy.max_hp), 1)
+                )
                 self.canvas.blit(hp_bar_surf, enemy.rect)
 
             self.canvas.blit(player_surf, player_coord)
@@ -329,6 +344,10 @@ class Game:
             for i, e in enumerate(self.enemies):
                 if e.despawn_mark == True:
                     del self.enemies[i]
+
+            for i, p in enumerate(self.particles):
+                if p.despawn_mark == True:
+                    del self.particles[i]
 
             # refresh the screen
             pygame.display.update()

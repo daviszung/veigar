@@ -21,9 +21,10 @@ class Enemy:
         self.rect = rect
         self.despawn_mark = False
         self.flip = False
-        self.y_velocity = 0
         self.terminal_velocity = 1
+        self.y_velocity = 0
         self.x_movement = 0
+
 
     def update(self):
         self.animations[self.type][self.action].update()
