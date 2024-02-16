@@ -93,7 +93,8 @@ class Game:
         self.audio_groups = {
             # "jump": load_audio("jump1.wav", 0.2),
             # "landing": load_audio("landingOnGround.wav", 0.5),
-            "scream": AudioGroup([load_audio("scream1.wav", 0.4), load_audio("scream2.wav", 0.4), load_audio("scream3.wav", 0.4)])
+            "scream": AudioGroup([load_audio("scream1.wav", 0.4), load_audio("scream2.wav", 0.4), load_audio("scream3.wav", 0.4)]),
+            "hit": AudioGroup([load_audio("hit1.wav", 0.4), load_audio("hit2.wav", 0.4), load_audio("hit3.wav", 0.4)])
         }
 
         heart_hud_images = {
@@ -287,10 +288,12 @@ class Game:
                 ):
                     self.player.invincibility_frames = 90
                     self.heart_hud.update(-1)
-                    self.player.action = "hit"
                     if self.heart_hud.hearts <= 0:
                         self.player.action = "dying"
                         self.player.controls_lock = True
+                    else:
+                        self.player.action = "hit"
+                        self.audio_groups["hit"].play_random()
 
             # collision detect with attacks against enemies
             for projectile in self.projectiles:
