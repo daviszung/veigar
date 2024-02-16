@@ -20,7 +20,7 @@ def load_images(path: str):
     return images
 
 
-# def load_audio(path: str):
-#     audio = pygame.mixer.Sound(BASE_AUDIO_ASSET_PATH + path)
-#     audio.set_volume(0.5)
-#     return audio
+def load_audio(path: str, vol: float):
+    audio = pygame.mixer.Sound(BASE_AUDIO_ASSET_PATH + path)
+    audio.set_volume(vol)
+    return audio

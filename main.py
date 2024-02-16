@@ -4,7 +4,7 @@ import random
 
 from typing import Dict, List, Tuple
 
-from scripts.utils import load_img
+from scripts.utils import load_img, load_audio
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
 from scripts.enemy import Enemy
@@ -13,6 +13,7 @@ from scripts.heart_hud import HeartHud
 from scripts.malice_hud import MaliceHud
 from scripts.player import Player
 from scripts.particle import Particle
+from scripts.audio_group import AudioGroup
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
@@ -82,6 +83,18 @@ class Game:
         self.player = Player()
 
         self.projectiles: List[Projectile] = []
+
+        pygame.mixer.init()
+
+        pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
+
+        pygame.mixer.music.play(-1)
+
+        self.audio_groups = {
+            # "jump": load_audio("jump1.wav", 0.2),
+            # "landing": load_audio("landingOnGround.wav", 0.5),
+            "scream": AudioGroup([load_audio("scream1.wav", 0.4), load_audio("scream2.wav", 0.4), load_audio("scream3.wav", 0.4)])
+        }
 
         heart_hud_images = {
             "heart": load_img("frames/ui_heart_full.png"),
@@ -286,9 +299,21 @@ class Game:
                         enemy.hp -= (self.player.malice // 3) + 1
                         if enemy.hp <= 0:
                             enemy.despawn_mark = True
+                            self.audio_groups["scream"].play_random()
                             for i in range(10):
-                                self.particles.append(Particle([enemy.rect.x + 8, enemy.rect.y + 8], [random.randint(-3, 3), random.randint(-3, 3)], random.randint(2, 4), pygame.Color(random.randint(0, 255),random.randint(0, 255), random.randint(0, 255))))
-                            
+                                self.particles.append(
+                                    Particle(
+                                        [enemy.rect.x + 8, enemy.rect.y + 8],
+                                        [random.randint(-3, 3), random.randint(-3, 3)],
+                                        random.randint(2, 4),
+                                        pygame.Color(
+                                            random.randint(0, 255),
+                                            random.randint(0, 255),
+                                            random.randint(0, 255),
+                                        ),
+                                    )
+                                )
+
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
                         projectile.despawn_mark = True
@@ -300,7 +325,9 @@ class Game:
             # render particles
             for particle in self.particles:
                 particle.update()
-                pygame.draw.circle(self.canvas, particle.color, particle.loc, particle.timer)
+                pygame.draw.circle(
+                    self.canvas, particle.color, particle.loc, particle.timer
+                )
 
             for enemy in self.enemies:
                 enemy.update()
@@ -339,6 +366,15 @@ class Game:
             for i, p in enumerate(self.projectiles):
                 if p.despawn_mark == True:
                     del self.projectiles[i]
+                    for i in range(5):
+                        self.particles.append(
+                            Particle(
+                                [p.rect.x, p.rect.y],
+                                [random.randint(-3, 3), random.randint(-3, 3)],
+                                3,
+                                (p.color),
+                            )
+                        )
 
             # despawn enemies
             for i, e in enumerate(self.enemies):
