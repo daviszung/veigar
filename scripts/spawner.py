@@ -25,7 +25,7 @@ class Spawner:
         if (
             len(enemies) < max_enemies
             and self.timer % 60 == 0
-            and random.randint(1, max(3, 30 - malice)) == 1
+            and random.randint(1, max(4, 30 - malice)) == 1
         ):
             self.spawn_enemy("imp", 5, enemies)
 

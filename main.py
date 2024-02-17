@@ -14,6 +14,7 @@ from scripts.malice_hud import MaliceHud
 from scripts.player import Player
 from scripts.particle import Particle
 from scripts.audio_group import AudioGroup
+from scripts.item import Item
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
@@ -113,6 +114,12 @@ class Game:
         self.spawner = Spawner()
 
         self.enemies: List[Enemy] = []
+
+        self.item_images = {
+            "hp_potion": load_img("frames/flask_big_red.png")
+        }
+
+        self.items: List[Item] = [Item(self.item_images["hp_potion"], "hp_potion", pygame.Rect(100, 100, 16, 16), 100)]
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
@@ -322,7 +329,7 @@ class Game:
                         projectile.despawn_mark = True
 
             # finally... render
-            self.canvas.fill("gray")
+            self.canvas.fill("cornflowerblue")
             self.map.render(self.canvas)
 
             # render particles
@@ -350,13 +357,18 @@ class Game:
             self.canvas.blit(player_surf, player_coord)
 
             # render projectiles
-            for i, p in enumerate(self.projectiles):
+            for p in self.projectiles:
                 if p.rect.x < 0 or p.rect.x > self.canvas_width:
                     p.despawn_mark = True
 
                 p.rect.x += p.velocity[0]
                 p.rect.y += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, (p.rect.x, p.rect.y), p.radius)
+            
+            # render items
+            for item in self.items:
+                item.update()
+                self.canvas.blit(item.image, item.rect)
 
             # render HUDs
             self.canvas.blit(self.malice_hud.surf, (270, 2))
@@ -381,12 +393,16 @@ class Game:
 
             # despawn enemies
             for i, e in enumerate(self.enemies):
-                if e.despawn_mark == True:
+                if e.despawn_mark:
                     del self.enemies[i]
 
             for i, p in enumerate(self.particles):
-                if p.despawn_mark == True:
+                if p.despawn_mark:
                     del self.particles[i]
+            
+            for i, item in enumerate(self.items):
+                if item.despawn_mark:
+                    del self.items[i]
 
             # refresh the screen
             pygame.display.update()

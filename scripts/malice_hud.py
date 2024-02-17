@@ -13,7 +13,7 @@ class MaliceHud:
 
     def update(self, malice: int):
         self.malice = malice
-        self.surf.fill("gray")
+        self.surf.fill("cornflowerblue")
         self.surf.blit(self.images["malice"], (0, 0))
         text = self.font.render(str(self.malice), False, (0, 0, 0))
         self.surf.blit(text, (20, 2))

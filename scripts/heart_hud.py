@@ -10,7 +10,7 @@ class HeartHud:
 
     def update(self, heart_modifier: int):
         self.hearts += heart_modifier
-        self.surf.fill("gray")
+        self.surf.fill("cornflowerblue")
         for i in range(self.max_hearts):
             if self.hearts >= i + 1:
                 self.surf.blit(self.images["heart"], (i * 16, 0))
