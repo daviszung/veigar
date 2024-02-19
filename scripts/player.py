@@ -11,6 +11,7 @@ class Player:
             "falling": Animation(load_images("mage/Falling"), loop = True),
             "rising": Animation(load_images("mage/Rising"), loop = True),
             "attack": Animation(load_images("mage/Attack/StaffWood"), 6, False),
+            "attack_crystal": Animation(load_images("mage/Attack/StaffCrystal"), 6, False),
             "hit": Animation(load_images("mage/Hit"), 50, loop = False),
             "dying": Animation(load_images("mage/Dying"), 16, False),
             "dead": Animation(load_images("mage/Dead"), loop = False)
@@ -26,6 +27,7 @@ class Player:
         self.action = "idle"
         self.controls_lock = False
         self.malice = 0
+        self.staff = "wood"
 
     def update(self):
         if self.invincibility_frames > 0:
@@ -34,7 +36,7 @@ class Player:
         self.images[self.action].update()
 
         # idle after an attack
-        if self.action == "attack" and self.images[self.action].done:
+        if (self.action == "attack" or self.action == "attack_crystal") and self.images[self.action].done:
             self.action = "idle"
 
         self.y_velocity = min(self.terminal_velocity, self.y_velocity + 0.2)

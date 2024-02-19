@@ -86,6 +86,7 @@ class Game:
         self.projectiles: List[Projectile] = []
 
         pygame.mixer.init()
+        self.audio_timer = 0
 
         pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
 
@@ -94,9 +95,28 @@ class Game:
         self.audio_groups = {
             # "jump": load_audio("jump1.wav", 0.2),
             # "landing": load_audio("landingOnGround.wav", 0.5),
-            "scream": AudioGroup([load_audio("scream1.wav", 0.4), load_audio("scream2.wav", 0.4), load_audio("scream3.wav", 0.4)]),
-            "hit": AudioGroup([load_audio("hitB1.wav", 0.4), load_audio("hitB2.wav", 0.4), load_audio("hitB3.wav", 0.4)]),
-            "hp_up": AudioGroup([load_audio("hp_up1.wav", 0.4), load_audio("hp_up2.wav", 0.4), load_audio("hp_up3.wav", 0.4)])
+            "scream": AudioGroup(
+                [
+                    load_audio("scream1.wav", 0.4),
+                    load_audio("scream2.wav", 0.4),
+                    load_audio("scream3.wav", 0.4),
+                ]
+            ),
+            "hit": AudioGroup(
+                [
+                    load_audio("hitB1.wav", 0.4),
+                    load_audio("hitB2.wav", 0.4),
+                    load_audio("hitB3.wav", 0.4),
+                ]
+            ),
+            "hp_up": AudioGroup(
+                [
+                    load_audio("hp_up1.wav", 0.4),
+                    load_audio("hp_up2.wav", 0.4),
+                    load_audio("hp_up3.wav", 0.4),
+                ]
+            ),
+            "acquire_crystal_staff": AudioGroup([load_audio("acquire_crystal_staff.wav", 1)])
         }
 
         heart_hud_images = {
@@ -117,10 +137,19 @@ class Game:
         self.enemies: List[Enemy] = []
 
         self.item_images = {
-            "hp_potion": load_img("frames/flask_big_red.png")
+            "hp_potion": load_img("frames/flask_big_red.png"),
+            "staff_crystal": load_img("mage/Staffs/staff_crystal.png"),
+            "staff_mighty": load_img("mage/Staffs/staff_mighty.png"),
         }
 
-        self.items: List[Item] = []
+        self.items: List[Item] = [
+            Item(
+                self.item_images["staff_crystal"],
+                "staff_crystal",
+                pygame.Rect(100, 100, 16, 16),
+                1000,
+            )
+        ]
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
@@ -211,8 +240,16 @@ class Game:
                         player_x_movement += 2
                         self.player.action = "run"
                 if keys[pygame.K_j] and not keys[pygame.K_s] and not keys[pygame.K_f]:
-                    self.player.action = "attack"
-                    self.player.images["attack"] = self.player.images["attack"].copy()
+                    if self.player.staff == "wood":
+                        self.player.action = "attack"
+                        self.player.images["attack"] = self.player.images[
+                            "attack"
+                        ].copy()
+                    elif self.player.staff == "crystal":
+                        self.player.action = "attack_crystal"
+                        self.player.images["attack_crystal"] = self.player.images[
+                            "attack_crystal"
+                        ].copy()
 
             # move player
             player_coord, collisions = self.move(
@@ -229,6 +266,7 @@ class Game:
             # check for idling
             if player_x_movement == 0 and self.player.action not in {
                 "attack",
+                "attack_crystal",
                 "hit",
                 "dying",
             }:
@@ -246,7 +284,7 @@ class Game:
             player_surf = self.player.images[self.player.action].img()
 
             # special rendering for attack
-            if self.player.action == "attack":
+            if self.player.action == "attack" or self.player.action == "attack_crystal":
                 player_coord = (self.player.hitbox.x, self.player.hitbox.y - 16)
 
             # render the player and render according to if moving right or left
@@ -255,9 +293,8 @@ class Game:
 
             # create projectile when casting attack spell
             if (
-                self.player.action == "attack"
-                and self.player.images[self.player.action].frame == 25
-            ):
+                self.player.action == "attack" or self.player.action == "attack_crystal"
+            ) and self.player.images[self.player.action].frame == 25:
                 projectile_info = [self.player.hitbox.right, 3]
                 if self.player.flip:
                     projectile_info = [self.player.hitbox.left, -3]
@@ -331,7 +368,14 @@ class Game:
 
                             # chance of dropping item
                             if random.randint(1, 9) == 1:
-                                self.items.append(Item(self.item_images["hp_potion"], "hp_potion", pygame.Rect(enemy.rect.x, enemy.rect.y, 16, 16), 900))
+                                self.items.append(
+                                    Item(
+                                        self.item_images["hp_potion"],
+                                        "hp_potion",
+                                        pygame.Rect(enemy.rect.x, enemy.rect.y, 16, 16),
+                                        900,
+                                    )
+                                )
 
                         projectile.despawn_mark = True
 
@@ -343,6 +387,20 @@ class Game:
                         if self.heart_hud.hearts < self.heart_hud.max_hearts:
                             self.audio_groups["hp_up"].play_random()
                         self.heart_hud.update(1)
+                    elif item.kind == "staff_crystal":
+                        self.player.staff = "crystal"
+                        pygame.mixer_music.pause()
+                        self.audio_timer = 150
+                        self.audio_groups["acquire_crystal_staff"].play_random()
+                        for i in range(35):
+                            self.particles.append(
+                                Particle(
+                                    [self.player.hitbox.x + 8, self.player.hitbox.y + 8],
+                                    [random.randint(-3, 3), random.randint(3, 7) * -1],
+                                    random.randint(3, 7),
+                                    random.choice([pygame.Color(65, 59, 236), pygame.Color(104, 174, 253)]),
+                                )
+                            )
 
             # finally... render
             self.canvas.fill("cornflowerblue")
@@ -380,7 +438,7 @@ class Game:
                 p.rect.x += p.velocity[0]
                 p.rect.y += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, (p.rect.x, p.rect.y), p.radius)
-            
+
             # render items
             for item in self.items:
                 item.update()
@@ -415,15 +473,22 @@ class Game:
             for i, p in enumerate(self.particles):
                 if p.despawn_mark:
                     del self.particles[i]
-            
+
             for i, item in enumerate(self.items):
                 if item.despawn_mark:
                     del self.items[i]
+            
+            # audio timer
+            if self.audio_timer > 0:
+                self.audio_timer -= 1
+                if self.audio_timer <= 0:
+                    pygame.mixer_music.unpause()
 
             # refresh the screen
             pygame.display.update()
 
             # 60 FPS
             self.clock.tick(60)
+
 
 Game().run()

@@ -4,9 +4,9 @@ from typing import List
 
 
 class Particle:
-    def __init__(self, loc: List[float], y_velocity: List[float], timer: float, color: pygame.Color):
+    def __init__(self, loc: List[float], velocity: List[float], timer: float, color: pygame.Color):
         self.loc = loc
-        self.velocity = y_velocity
+        self.velocity = velocity
         self.timer = timer
         self.despawn_mark = False
         self.color = color
