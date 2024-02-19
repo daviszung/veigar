@@ -2,7 +2,7 @@ import pygame
 
 
 class Item():
-    def __init__(self, image: pygame.Surface, kind: str, rect: pygame.Rect, duration: float):
+    def __init__(self, image: pygame.Surface, kind: str, rect: pygame.Rect, duration: int):
         self.image = image
         self.kind = kind
         self.rect = rect
@@ -10,6 +10,6 @@ class Item():
         self.despawn_mark = False
     
     def update(self):
-        self.duration -= 0.1
+        self.duration -= 1
         if self.duration <= 0:
             self.despawn_mark = True

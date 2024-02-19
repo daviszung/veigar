@@ -89,7 +89,7 @@ class Game:
 
         pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
 
-        # pygame.mixer.music.play(-1)
+        pygame.mixer.music.play(-1)
 
         self.audio_groups = {
             # "jump": load_audio("jump1.wav", 0.2),
@@ -330,7 +330,7 @@ class Game:
 
                             # chance of dropping item
                             if random.randint(1, 9) == 1:
-                                self.items.append(Item(self.item_images["hp_potion"], "hp_potion", pygame.Rect(enemy.rect.x, enemy.rect.y, 16, 16), 100))
+                                self.items.append(Item(self.item_images["hp_potion"], "hp_potion", pygame.Rect(enemy.rect.x, enemy.rect.y, 16, 16), 900))
 
                         projectile.despawn_mark = True
 
