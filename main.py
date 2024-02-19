@@ -95,7 +95,8 @@ class Game:
             # "jump": load_audio("jump1.wav", 0.2),
             # "landing": load_audio("landingOnGround.wav", 0.5),
             "scream": AudioGroup([load_audio("scream1.wav", 0.4), load_audio("scream2.wav", 0.4), load_audio("scream3.wav", 0.4)]),
-            "hit": AudioGroup([load_audio("hit1.wav", 0.4), load_audio("hit2.wav", 0.4), load_audio("hit3.wav", 0.4)])
+            "hit": AudioGroup([load_audio("hitB1.wav", 0.4), load_audio("hitB2.wav", 0.4), load_audio("hitB3.wav", 0.4)]),
+            "hp_up": AudioGroup([load_audio("hp_up1.wav", 0.4), load_audio("hp_up2.wav", 0.4), load_audio("hp_up3.wav", 0.4)])
         }
 
         heart_hud_images = {
@@ -339,6 +340,8 @@ class Game:
                 if item.rect.colliderect(self.player.hitbox):
                     item.despawn_mark = True
                     if item.kind == "hp_potion":
+                        if self.heart_hud.hearts < self.heart_hud.max_hearts:
+                            self.audio_groups["hp_up"].play_random()
                         self.heart_hud.update(1)
 
             # finally... render
