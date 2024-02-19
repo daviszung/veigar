@@ -1,5 +1,6 @@
 import pygame
 
+
 class Item():
     def __init__(self, image: pygame.Surface, kind: str, rect: pygame.Rect, duration: float):
         self.image = image
@@ -12,4 +13,3 @@ class Item():
         self.duration -= 0.1
         if self.duration <= 0:
             self.despawn_mark = True
-    

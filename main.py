@@ -89,7 +89,7 @@ class Game:
 
         pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
 
-        pygame.mixer.music.play(-1)
+        # pygame.mixer.music.play(-1)
 
         self.audio_groups = {
             # "jump": load_audio("jump1.wav", 0.2),
@@ -119,7 +119,7 @@ class Game:
             "hp_potion": load_img("frames/flask_big_red.png")
         }
 
-        self.items: List[Item] = [Item(self.item_images["hp_potion"], "hp_potion", pygame.Rect(100, 100, 16, 16), 100)]
+        self.items: List[Item] = []
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
@@ -308,6 +308,7 @@ class Game:
                     if projectile.rect.colliderect(enemy.rect):
                         enemy.hp -= (self.player.malice // 3) + 1
                         if enemy.hp <= 0:
+                            # enemy death
                             enemy.despawn_mark = True
                             self.audio_groups["scream"].play_random()
                             for i in range(10):
@@ -326,7 +327,19 @@ class Game:
 
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
+
+                            # chance of dropping item
+                            if random.randint(1, 9) == 1:
+                                self.items.append(Item(self.item_images["hp_potion"], "hp_potion", pygame.Rect(enemy.rect.x, enemy.rect.y, 16, 16), 100))
+
                         projectile.despawn_mark = True
+
+            # collision detection with items
+            for item in self.items:
+                if item.rect.colliderect(self.player.hitbox):
+                    item.despawn_mark = True
+                    if item.kind == "hp_potion":
+                        self.heart_hud.update(1)
 
             # finally... render
             self.canvas.fill("cornflowerblue")
@@ -409,6 +422,5 @@ class Game:
 
             # 60 FPS
             self.clock.tick(60)
-
 
 Game().run()

@@ -9,7 +9,7 @@ class HeartHud:
         self.surf = pygame.Surface((46, 12))
 
     def update(self, heart_modifier: int):
-        self.hearts += heart_modifier
+        self.hearts = min(self.max_hearts, self.hearts + heart_modifier)
         self.surf.fill("cornflowerblue")
         for i in range(self.max_hearts):
             if self.hearts >= i + 1:
