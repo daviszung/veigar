@@ -13,6 +13,11 @@ item_drop_chance = {
     "mawface": 1
 }
 
+hp_bar_size = {
+    "imp": 16,
+    "mawface": 32
+}
+
 
 class Enemy:
     def __init__(self, id: int, type: str, max_hp: int, rect: pygame.Rect):
@@ -40,6 +45,7 @@ class Enemy:
         self.y_velocity = 0
         self.x_movement = 0
         self.drop_chance = item_drop_chance[type]
+        self.hp_bar = pygame.Surface((hp_bar_size[type], 1))
 
 
     def update(self):

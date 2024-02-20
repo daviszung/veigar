@@ -120,7 +120,9 @@ class Game:
                     load_audio("hp_up3.wav", 0.4),
                 ]
             ),
-            "acquire_crystal_staff": AudioGroup([load_audio("acquire_crystal_staff.wav", 1)])
+            "acquire_crystal_staff": AudioGroup(
+                [load_audio("acquire_crystal_staff.wav", 1)]
+            ),
         }
 
         heart_hud_images = {
@@ -138,6 +140,7 @@ class Game:
 
         self.spawner = Spawner()
 
+        # self.enemies: List[Enemy] = [Enemy(1, "mawface", 100, pygame.Rect(0, 0, 20, 30))]
         self.enemies: List[Enemy] = []
 
         self.item_images = {
@@ -364,7 +367,12 @@ class Game:
                                     Item(
                                         self.item_images["hp_potion"],
                                         "hp_potion",
-                                        pygame.Rect(enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1], 16, 16),
+                                        pygame.Rect(
+                                            enemy.rect.x + enemy.offset[0],
+                                            enemy.rect.y + enemy.offset[1],
+                                            16,
+                                            16,
+                                        ),
                                         900,
                                     )
                                 )
@@ -387,10 +395,18 @@ class Game:
                         for i in range(35):
                             self.particles.append(
                                 Particle(
-                                    [self.player.hitbox.x + 8, self.player.hitbox.y + 8],
+                                    [
+                                        self.player.hitbox.x + 8,
+                                        self.player.hitbox.y + 8,
+                                    ],
                                     [random.randint(-3, 3), random.randint(3, 7) * -1],
                                     random.randint(3, 7),
-                                    random.choice([pygame.Color(65, 59, 236), pygame.Color(104, 174, 253)]),
+                                    random.choice(
+                                        [
+                                            pygame.Color(65, 59, 236),
+                                            pygame.Color(104, 174, 253),
+                                        ]
+                                    ),
                                 )
                             )
 
@@ -407,20 +423,34 @@ class Game:
 
             for enemy in self.enemies:
                 enemy.update()
-                self.canvas.blit(pygame.transform.flip(enemy.animations[enemy.type][enemy.action].img(), enemy.flip, False), (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]))
+                self.canvas.blit(
+                    pygame.transform.flip(
+                        enemy.animations[enemy.type][enemy.action].img(),
+                        enemy.flip,
+                        False,
+                    ),
+                    (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]),
+                )
 
                 # create an HP bar
-                hp_bar_surf = pygame.Surface((16, 1))
-                hp_bar_surf.fill("black")
+                enemy.hp_bar.fill("black")
                 pygame.draw.rect(
-                    hp_bar_surf, "red", (0, 0, (16 * enemy.hp / enemy.max_hp), 1)
+                    enemy.hp_bar, "red", (0, 0, (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp), 1)
                 )
-                self.canvas.blit(hp_bar_surf, (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]))
+                self.canvas.blit(
+                    enemy.hp_bar,
+                    (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]),
+                )
 
             # render player
-            self.canvas.blit(pygame.transform.flip(self.player.images[self.player.action].img(), self.player.flip, False), player_coord)
-            # pygame.draw.rect(self.canvas, "red", self.player.hitbox)
-
+            self.canvas.blit(
+                pygame.transform.flip(
+                    self.player.images[self.player.action].img(),
+                    self.player.flip,
+                    False,
+                ),
+                player_coord,
+            )
 
             # render projectiles
             for p in self.projectiles:
@@ -457,7 +487,7 @@ class Game:
                             )
                         )
 
-            # despawn enemies
+            # despawn marked entities
             for i, e in enumerate(self.enemies):
                 if e.despawn_mark:
                     del self.enemies[i]
@@ -469,7 +499,7 @@ class Game:
             for i, item in enumerate(self.items):
                 if item.despawn_mark:
                     del self.items[i]
-            
+
             # audio timer
             if self.audio_timer > 0:
                 self.audio_timer -= 1
