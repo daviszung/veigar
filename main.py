@@ -340,6 +340,7 @@ class Game:
                 for enemy in self.enemies:
                     if projectile.rect.colliderect(enemy.rect):
                         enemy.hp -= (self.player.malice // 3) + 1
+                        enemy.hp_bar.fill("black")
                         if enemy.hp <= 0:
                             # enemy death
                             enemy.despawn_mark = True
@@ -433,7 +434,6 @@ class Game:
                 )
 
                 # create an HP bar
-                enemy.hp_bar.fill("black")
                 pygame.draw.rect(
                     enemy.hp_bar, "red", (0, 0, (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp), 1)
                 )
