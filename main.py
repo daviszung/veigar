@@ -39,8 +39,6 @@ map: Dict[str, List[Tuple[int, int]]] = {
         (17, 10),
         (18, 10),
         (19, 10),
-        (11, 8),
-        (5, 8),
     ]
 }
 
@@ -58,6 +56,12 @@ OFFSET = [
     (-1, -1),
     (0, -1),
     (1, -1),
+    (2, 0),
+    (2, -1),
+    (2, 1),
+    (-2, 0),
+    (-2, -1),
+    (-2, 1),
 ]
 
 
@@ -274,7 +278,6 @@ class Game:
 
             # RENDERING
             self.player.update()
-            player_surf = self.player.images[self.player.action].img()
 
             # special rendering for attack
             if self.player.action == "attack" or self.player.action == "attack_crystal":
@@ -404,8 +407,8 @@ class Game:
 
             for enemy in self.enemies:
                 enemy.update()
-                enemy_surf = enemy.animations[enemy.type][enemy.action].img()
-                self.canvas.blit(pygame.transform.flip(enemy_surf, enemy.flip, False), enemy.rect)
+                self.canvas.blit(pygame.transform.flip(enemy.animations[enemy.type][enemy.action].img(), enemy.flip, False), (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]))
+                pygame.draw.rect(self.canvas, "blue", (enemy.rect.x, enemy.rect.y, enemy.rect.width, enemy.rect.height))
 
                 # create an HP bar
                 hp_bar_surf = pygame.Surface((16, 1))
@@ -413,10 +416,12 @@ class Game:
                 pygame.draw.rect(
                     hp_bar_surf, "red", (0, 0, (16 * enemy.hp / enemy.max_hp), 1)
                 )
-                self.canvas.blit(hp_bar_surf, enemy.rect)
+                self.canvas.blit(hp_bar_surf, (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]))
 
             # render player
-            self.canvas.blit(pygame.transform.flip(player_surf, self.player.flip, False), player_coord)
+            self.canvas.blit(pygame.transform.flip(self.player.images[self.player.action].img(), self.player.flip, False), player_coord)
+            # pygame.draw.rect(self.canvas, "red", self.player.hitbox)
+
 
             # render projectiles
             for p in self.projectiles:

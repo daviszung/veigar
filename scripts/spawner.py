@@ -6,7 +6,8 @@ from typing import List
 from scripts.enemy import Enemy
 
 enemy_sizes = {
-    "imp": (12, 16),
+    "imp": (10, 12),
+    "mawface": (20, 30)
 }
 
 
@@ -19,7 +20,7 @@ class Spawner:
         max_enemies = 1 + int(math.log(malice + 1, 2))
         self.timer += 1
         if len(enemies) == 0 and self.timer % 60 == 0:
-            self.spawn_enemy("imp", 5, enemies)
+            self.spawn_enemy("mawface", 50, enemies)
             return
 
         if (
@@ -27,7 +28,7 @@ class Spawner:
             and self.timer % 60 == 0
             and random.randint(1, max(4, 30 - malice)) == 1
         ):
-            self.spawn_enemy("imp", 5, enemies)
+            self.spawn_enemy("mawface", 50, enemies)
 
 
     def spawn_enemy(self, type: str, hp: int, enemies: List[Enemy]):

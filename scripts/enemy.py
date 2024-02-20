@@ -3,6 +3,11 @@ from typing import List, Any
 from scripts.utils import load_images
 from scripts.animation import Animation
 
+enemy_offset: dict[str, List[int]] = {
+    "imp": [-3, -4],
+    "mawface": [-5, -6]
+}
+
 
 class Enemy:
     def __init__(self, id: int, type: str, max_hp: int, rect: pygame.Rect):
@@ -12,6 +17,10 @@ class Enemy:
             "imp": {
                 "idle": Animation(load_images("frames/imp/idle"), 8, loop = True),
                 "run": Animation(load_images("frames/imp/run"), 4, loop = True),
+            },
+            "mawface": {
+                "idle": Animation(load_images("frames/mawface/idle"), 8, loop = True),
+                "run": Animation(load_images("frames/mawface/run"), 6, loop = True),
             }
         }
         self.action = "run"
@@ -19,6 +28,7 @@ class Enemy:
         self.max_hp = max_hp
         self.hp = max_hp
         self.rect = rect
+        self.offset = enemy_offset[type]
         self.despawn_mark = False
         self.flip = False
         self.terminal_velocity = 1
@@ -40,6 +50,7 @@ class Enemy:
         for tile in tiles:
             if self.rect.colliderect(tile):
                 collisions.append(tile)
+        
     
         for tile in collisions:
             if x_movement > 0:
