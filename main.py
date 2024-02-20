@@ -142,14 +142,7 @@ class Game:
             "staff_mighty": load_img("mage/Staffs/staff_mighty.png"),
         }
 
-        self.items: List[Item] = [
-            Item(
-                self.item_images["staff_crystal"],
-                "staff_crystal",
-                pygame.Rect(100, 100, 16, 16),
-                1000,
-            )
-        ]
+        self.items: List[Item] = []
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
@@ -287,10 +280,6 @@ class Game:
             if self.player.action == "attack" or self.player.action == "attack_crystal":
                 player_coord = (self.player.hitbox.x, self.player.hitbox.y - 16)
 
-            # render the player and render according to if moving right or left
-            if self.player.flip:
-                player_surf = pygame.transform.flip(player_surf, True, False)
-
             # create projectile when casting attack spell
             if (
                 self.player.action == "attack" or self.player.action == "attack_crystal"
@@ -416,9 +405,7 @@ class Game:
             for enemy in self.enemies:
                 enemy.update()
                 enemy_surf = enemy.animations[enemy.type][enemy.action].img()
-                if enemy.flip:
-                    enemy_surf = pygame.transform.flip(enemy_surf, True, False)
-                self.canvas.blit(enemy_surf, enemy.rect)
+                self.canvas.blit(pygame.transform.flip(enemy_surf, enemy.flip, False), enemy.rect)
 
                 # create an HP bar
                 hp_bar_surf = pygame.Surface((16, 1))
@@ -428,7 +415,8 @@ class Game:
                 )
                 self.canvas.blit(hp_bar_surf, enemy.rect)
 
-            self.canvas.blit(player_surf, player_coord)
+            # render player
+            self.canvas.blit(pygame.transform.flip(player_surf, self.player.flip, False), player_coord)
 
             # render projectiles
             for p in self.projectiles:
