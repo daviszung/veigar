@@ -8,6 +8,11 @@ enemy_offset: dict[str, List[int]] = {
     "mawface": [-5, -6]
 }
 
+item_drop_chance = {
+    "imp": 9,
+    "mawface": 1
+}
+
 
 class Enemy:
     def __init__(self, id: int, type: str, max_hp: int, rect: pygame.Rect):
@@ -34,6 +39,7 @@ class Enemy:
         self.terminal_velocity = 1
         self.y_velocity = 0
         self.x_movement = 0
+        self.drop_chance = item_drop_chance[type]
 
 
     def update(self):

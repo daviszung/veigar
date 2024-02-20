@@ -359,12 +359,12 @@ class Game:
                             self.malice_hud.update(self.player.malice)
 
                             # chance of dropping item
-                            if random.randint(1, 9) == 1:
+                            if random.randint(1, enemy.drop_chance) == 1:
                                 self.items.append(
                                     Item(
                                         self.item_images["hp_potion"],
                                         "hp_potion",
-                                        pygame.Rect(enemy.rect.x, enemy.rect.y, 16, 16),
+                                        pygame.Rect(enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1], 16, 16),
                                         900,
                                     )
                                 )
@@ -408,7 +408,6 @@ class Game:
             for enemy in self.enemies:
                 enemy.update()
                 self.canvas.blit(pygame.transform.flip(enemy.animations[enemy.type][enemy.action].img(), enemy.flip, False), (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]))
-                pygame.draw.rect(self.canvas, "blue", (enemy.rect.x, enemy.rect.y, enemy.rect.width, enemy.rect.height))
 
                 # create an HP bar
                 hp_bar_surf = pygame.Surface((16, 1))

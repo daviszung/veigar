@@ -10,6 +10,11 @@ enemy_sizes = {
     "mawface": (20, 30)
 }
 
+enemy_hp = {
+    "imp": 5,
+    "mawface": 100
+}
+
 
 class Spawner:
     def __init__(self):
@@ -20,7 +25,7 @@ class Spawner:
         max_enemies = 1 + int(math.log(malice + 1, 2))
         self.timer += 1
         if len(enemies) == 0 and self.timer % 60 == 0:
-            self.spawn_enemy("mawface", 50, enemies)
+            self.spawn_enemy("imp", enemy_hp["imp"], enemies)
             return
 
         if (
@@ -28,7 +33,14 @@ class Spawner:
             and self.timer % 60 == 0
             and random.randint(1, max(4, 30 - malice)) == 1
         ):
-            self.spawn_enemy("mawface", 50, enemies)
+            enemy_to_spawn = ""
+            if malice >= 10 and random.randint(1, 8) == 1:
+                if any(e.type == "mawface" for e in enemies):
+                    enemy_to_spawn = "imp"
+                else:
+                    enemy_to_spawn = "mawface"
+            if enemy_to_spawn != "":
+                self.spawn_enemy(enemy_to_spawn, enemy_hp[enemy_to_spawn], enemies)
 
 
     def spawn_enemy(self, type: str, hp: int, enemies: List[Enemy]):
