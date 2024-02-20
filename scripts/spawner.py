@@ -46,5 +46,9 @@ class Spawner:
     def spawn_enemy(self, type: str, hp: int, enemies: List[Enemy]):
         enemy_location = (random.randint(0, 304), 0)
         enemy_rect = pygame.Rect(enemy_location, enemy_sizes[type])
-        enemies.append(Enemy(self.enemy_id_count, type, hp, enemy_rect))
+        enemy = Enemy(self.enemy_id_count, type, hp, enemy_rect)
+        pygame.draw.rect(
+            enemy.hp_bar, "red", (0, 0, (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp), 1)
+        )
+        enemies.append(enemy)
         self.enemy_id_count += 1

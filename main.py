@@ -340,7 +340,12 @@ class Game:
                 for enemy in self.enemies:
                     if projectile.rect.colliderect(enemy.rect):
                         enemy.hp -= (self.player.malice // 3) + 1
+                        # hp bar updates when hit
                         enemy.hp_bar.fill("black")
+                        pygame.draw.rect(
+                            enemy.hp_bar, "red", (0, 0, (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp), 1)
+                        )
+
                         if enemy.hp <= 0:
                             # enemy death
                             enemy.despawn_mark = True
@@ -411,7 +416,7 @@ class Game:
                                 )
                             )
 
-            # finally... render
+            # RENDERING
             self.canvas.fill("cornflowerblue")
             self.map.render(self.canvas)
 
@@ -422,6 +427,7 @@ class Game:
                     self.canvas, particle.color, particle.loc, particle.timer
                 )
 
+            # render enemies
             for enemy in self.enemies:
                 enemy.update()
                 self.canvas.blit(
@@ -433,10 +439,7 @@ class Game:
                     (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]),
                 )
 
-                # create an HP bar
-                pygame.draw.rect(
-                    enemy.hp_bar, "red", (0, 0, (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp), 1)
-                )
+                # render hp bar
                 self.canvas.blit(
                     enemy.hp_bar,
                     (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]),
