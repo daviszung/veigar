@@ -14,7 +14,6 @@ class Player:
             "attack_crystal": Animation(load_images("mage/Attack/StaffCrystal"), 6, False),
             "hit": Animation(load_images("mage/Hit"), 50, loop = False),
             "dying": Animation(load_images("mage/Dying"), 16, False),
-            "dead": Animation(load_images("mage/Dead"), loop = False)
         }
         self.images = player_animations
         self.size = 16
