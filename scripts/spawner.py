@@ -12,7 +12,7 @@ enemy_sizes = {
 
 enemy_hp = {
     "imp": 5,
-    "mawface": 100
+    "mawface": 250
 }
 
 
@@ -33,18 +33,21 @@ class Spawner:
             and self.timer % 60 == 0
             and random.randint(1, max(4, 30 - malice)) == 1
         ):
-            enemy_to_spawn = ""
-            if malice >= 10 and random.randint(1, 8) == 1:
+            enemy_to_spawn = "imp"
+            if malice >= 25 and random.randint(1, 7) == 1:
+                enemy_to_spawn = "mawface"
                 if any(e.type == "mawface" for e in enemies):
                     enemy_to_spawn = "imp"
-                else:
-                    enemy_to_spawn = "mawface"
-            if enemy_to_spawn != "":
-                self.spawn_enemy(enemy_to_spawn, enemy_hp[enemy_to_spawn], enemies)
+                    
+            self.spawn_enemy(enemy_to_spawn, enemy_hp[enemy_to_spawn], enemies)
 
 
     def spawn_enemy(self, type: str, hp: int, enemies: List[Enemy]):
-        enemy_location = (random.randint(0, 304), 0)
+        enemy_location = None
+        if type == "imp":
+            enemy_location = (random.randint(0, 304), 0)
+        else:
+            enemy_location = random.choice([(0 - enemy_sizes[type][0] , 130), (302, 130)])
         enemy_rect = pygame.Rect(enemy_location, enemy_sizes[type])
         enemy = Enemy(self.enemy_id_count, type, hp, enemy_rect)
         pygame.draw.rect(

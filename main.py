@@ -15,6 +15,7 @@ from scripts.player import Player
 from scripts.particle import Particle
 from scripts.audio_group import AudioGroup
 from scripts.item import Item
+from scripts.fire_worm import FireWorm
 
 
 map: Dict[str, List[Tuple[int, int]]] = {
@@ -94,7 +95,7 @@ class Game:
 
         pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
 
-        pygame.mixer.music.play(-1)
+        # pygame.mixer.music.play(-1)
 
         self.audio_groups = {
             # "jump": load_audio("jump1.wav", 0.2),
@@ -140,8 +141,9 @@ class Game:
 
         self.spawner = Spawner()
 
-        # self.enemies: List[Enemy] = [Enemy(1, "mawface", 100, pygame.Rect(0, 0, 20, 30))]
         self.enemies: List[Enemy] = []
+
+        self.fw = FireWorm()
 
         self.item_images = {
             "hp_potion": load_img("frames/flask_big_red.png"),
@@ -219,12 +221,28 @@ class Game:
                 pass
             else:
                 keys = pygame.key.get_pressed()
-                if (
-                    keys[pygame.K_SPACE]
-                    and self.player.airtime < 6
-                    and self.player.y_velocity >= 0
-                ):
-                    self.player.y_velocity = -3.7
+                if keys[pygame.K_SPACE]:
+                    if self.player.airtime < 6 and self.player.y_velocity >= 0:
+                        self.player.y_velocity = -3.7
+                    elif (
+                        self.player.airtime > 6
+                        and self.player.y_velocity > 0
+                        and self.player.double_jump
+                    ):
+                        self.player.y_velocity = -3.5
+                        self.player.double_jump = False
+                        for i in range(6):
+                            self.particles.append(
+                                Particle(
+                                    [
+                                        self.player.hitbox.x + 8,
+                                        self.player.hitbox.y + 2,
+                                    ],
+                                    [i - 3, 0],
+                                    random.randint(1, 4),
+                                    pygame.Color(225, 205, 205),
+                                )
+                            )
                 if keys[pygame.K_d] and self.player.airtime > 0:
                     self.player.y_velocity += 0.1
                 if keys[pygame.K_s]:
@@ -260,6 +278,7 @@ class Game:
 
             if collisions["bottom"] == True:
                 self.player.airtime = 0
+                self.player.double_jump = True
             else:
                 self.player.airtime += 1
 
@@ -302,7 +321,7 @@ class Game:
                 )
 
             # spawn new enemies randomly
-            self.spawner.tick(self.enemies, self.player.malice)
+            # self.spawner.tick(self.enemies, self.player.malice)
 
             # move the enemies
             for enemy in self.enemies:
@@ -343,7 +362,14 @@ class Game:
                         # hp bar updates when hit
                         enemy.hp_bar.fill("black")
                         pygame.draw.rect(
-                            enemy.hp_bar, "red", (0, 0, (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp), 1)
+                            enemy.hp_bar,
+                            "red",
+                            (
+                                0,
+                                0,
+                                (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp),
+                                1,
+                            ),
                         )
 
                         if enemy.hp <= 0:
@@ -444,6 +470,10 @@ class Game:
                     enemy.hp_bar,
                     (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]),
                 )
+            
+            self.fw.update()
+            self.canvas.blit(self.fw.animations[self.fw.action].img(), (self.fw.rect.x + self.fw.offset[0], self.fw.rect.y + self.fw.offset[1]))
+            pygame.draw.rect(self.canvas, "blue", pygame.Rect(self.fw.rect.x, self.fw.rect.y, self.fw.rect.width, self.fw.rect.height), width=1)
 
             # render player
             self.canvas.blit(

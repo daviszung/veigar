@@ -22,6 +22,7 @@ class Player:
         self.terminal_velocity = 5
         self.y_velocity: float = 0
         self.airtime = 0
+        self.double_jump = False
         self.invincibility_frames = 0
         self.flip = False
         self.action = "idle"

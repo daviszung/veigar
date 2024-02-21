@@ -1,1 +1,3 @@
-make hp bars adaptable to different sizes
+give mawface different sfx like an evil laugh
+
+mawface walks in from right or left
