@@ -27,7 +27,6 @@ def load_audio(path: str, vol: float):
 
 def extract_image(path: str, rects: List[pygame.Rect]):
     base = load_img(path)
-    print(base.get_size(), path)
     all_frames: List[pygame.Surface] = []
     for r in rects:
         all_frames.append(base.subsurface(r))

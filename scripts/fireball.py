@@ -6,7 +6,7 @@ from typing import List
 
 class FireBall():
     def __init__(self, loc: List[int], velocity: List[int], flip: bool):
-        self.rect = pygame.Rect(loc[0], loc[1], 16, 16)
+        self.rect = pygame.Rect(loc[0], loc[1], 16, 14)
         self.velocity = velocity
         self.despawn_mark = False
         self.flip = flip
@@ -16,10 +16,6 @@ class FireBall():
             # "explosion": Animation()
 
         }
-        print(self.animations["move"].img().get_size())
-    
-
-        pass
 
     def update(self):
         self.animations[self.action].update()

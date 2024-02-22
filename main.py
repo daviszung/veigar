@@ -90,7 +90,7 @@ class Game:
         self.player = Player()
 
         self.projectiles: List[Projectile] = []
-        self.enemy_projectiles: List[FireBall] = [FireBall([100, 50], [0, 0], False)]
+        self.enemy_projectiles: List[FireBall] = []
 
         pygame.mixer.init()
         self.audio_timer = 0
@@ -142,7 +142,7 @@ class Game:
         self.malice_hud.update(self.player.malice)
 
         self.spawner = Spawner()
-        self.spawner.pause = True
+        # self.spawner.pause = True
 
         self.enemies: List[Enemy] = []
 
@@ -210,8 +210,17 @@ class Game:
                 nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
 
         return nearby_rects
-    
-    def despawn_entities(self, entities: List[Enemy] | List[Projectile] | List[FireBall] | List[Particle] | List[Item]):
+
+    def despawn_entities(
+        self,
+        entities: (
+            List[Enemy]
+            | List[Projectile]
+            | List[FireBall]
+            | List[Particle]
+            | List[Item]
+        ),
+    ):
         for i, e in enumerate(entities):
             if e.despawn_mark:
                 del entities[i]
@@ -359,6 +368,7 @@ class Game:
                     enemy.move(0, self.enemies, terrain_near_enemy)
 
                 # collision detections with enemy hitting the player
+
                 if (
                     enemy.rect.colliderect(self.player.hitbox)
                     and self.player.invincibility_frames == 0
@@ -424,13 +434,16 @@ class Game:
                                 )
 
                         projectile.despawn_mark = True
-            
+
             # enemy projectile logic
-            for missile in self.enemy_projectiles:
-                if missile.rect.colliderect(self.player.hitbox) and self.player.invincibility_frames == 0:
+            for p in self.enemy_projectiles:
+                if (
+                    p.rect.colliderect(self.player.hitbox)
+                    and self.player.invincibility_frames == 0
+                ):
                     self.hit_player(-1)
-                if missile.rect.x < 0 or missile.rect.x > self.canvas_width:
-                    missile.despawn_mark = True
+                if p.rect.x < 0 or p.rect.x > self.canvas_width:
+                    p.despawn_mark = True
 
             # collision detection with items
             for item in self.items:
@@ -505,13 +518,44 @@ class Game:
                 else:
                     self.fw.move(0, tiles)
 
-                if self.fw.rect.colliderect(self.player.hitbox) and self.player.invincibility_frames == 0:
+                if (
+                    self.fw.rect.colliderect(self.player.hitbox)
+                    and self.player.invincibility_frames == 0
+                ):
                     self.hit_player(-1)
 
-                if self.fw.action == "attack" and self.fw.animations["attack"].frame / self.fw.animations["attack"].img_dur == 12:
-                    self.particles.append(Particle([self.fw.rect.x, self.fw.rect.y], [1, 1], 20, pygame.Color("white")))
-                self.canvas.blit(pygame.transform.flip(self.fw.animations[self.fw.action].img(), self.fw.flip, False), (self.fw.rect.x + self.fw.offset[0], self.fw.rect.y + self.fw.offset[1]))
-                # pygame.draw.rect(self.canvas, "blue", pygame.Rect(self.fw.rect.x, self.fw.rect.y, self.fw.rect.width, self.fw.rect.height), width=1)
+                if (
+                    self.fw.action == "attack"
+                    and self.fw.animations["attack"].frame
+                    / self.fw.animations["attack"].img_dur
+                    == 12
+                ):
+                    loc = [0, 0]
+                    vel = [0, 0]
+                    if self.fw.flip:
+                        loc = [self.fw.rect.x, self.fw.rect.y]
+                        vel = [-1, 0]
+                    else:
+                        loc = [self.fw.rect.topright[0], self.fw.rect.y + 4]
+                        vel = [1, 0]
+                    self.enemy_projectiles.append(
+                        FireBall(loc, vel, self.fw.flip),
+                    )
+                    self.enemy_projectiles.append(
+                        FireBall(loc, [vel[0], vel[1] + 1], self.fw.flip)
+                    )
+                    self.enemy_projectiles.append(
+                        FireBall(loc, [vel[0], vel[1] - 1], self.fw.flip),
+                    )
+                self.canvas.blit(
+                    pygame.transform.flip(
+                        self.fw.animations[self.fw.action].img(), self.fw.flip, False
+                    ),
+                    (
+                        self.fw.rect.x + self.fw.offset[0],
+                        self.fw.rect.y + self.fw.offset[1],
+                    ),
+                )
 
             # render player
             self.canvas.blit(
@@ -531,17 +575,26 @@ class Game:
                 p.rect.x += p.velocity[0]
                 p.rect.y += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, (p.rect.x, p.rect.y), p.radius)
-            
+
             # render enemy projectiles
             for p in self.enemy_projectiles:
-                if p.rect.x < 0 or p.rect.x > self.canvas_width:
-                    p.despawn_mark = True
-
                 p.rect.x += p.velocity[0]
                 p.rect.y += p.velocity[1]
                 p.update()
-                self.canvas.blit(pygame.transform.flip(p.animations[p.action].img(), p.flip, False), p.rect)
-            
+                img = p.animations[p.action].img()
+                offset = [0, 0]
+                if p.velocity[1] < 0:
+                    img = pygame.transform.rotate(img, 45)
+                    offset = [-2, -4]
+
+                elif p.velocity[1] > 0:
+                    img = pygame.transform.rotate(img, -45)
+                    offset = [-2, -4]
+
+                self.canvas.blit(
+                    pygame.transform.flip(img, p.flip, False),
+                    (p.rect.x + offset[0], p.rect.y + offset[1]),
+                )
 
             # render items
             for item in self.items:
@@ -568,7 +621,7 @@ class Game:
                                 (p.color),
                             )
                         )
-            
+
             # despawn marked entities
             self.despawn_entities(self.enemies)
             self.despawn_entities(self.particles)
@@ -586,5 +639,6 @@ class Game:
 
             # 60 FPS
             self.clock.tick(60)
+
 
 Game().run()
