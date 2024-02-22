@@ -1,3 +1,5 @@
 give mawface different sfx like an evil laugh
 
-mawface walks in from right or left
+music for fw boss
+
+sfx for fw boss attack

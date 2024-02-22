@@ -13,8 +13,6 @@ class FireBall():
         self.action = "move"
         self.animations = {
             "move": Animation(extract_image("fireworm/Sprites/fireball/Move.png", [pygame.Rect(16, 16, 16, 16), pygame.Rect(62, 16, 16, 16),pygame.Rect(108, 16, 16, 16), pygame.Rect(154, 16, 16, 16), pygame.Rect(200, 16, 16, 16), pygame.Rect(246, 16, 16, 16)])),
-            # "explosion": Animation()
-
         }
 
     def update(self):

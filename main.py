@@ -126,6 +126,13 @@ class Game:
             "acquire_crystal_staff": AudioGroup(
                 [load_audio("acquire_crystal_staff.wav", 1)]
             ),
+            "spawn_fireball": AudioGroup(
+                [
+                    load_audio("spawn_fireball1.wav", 0.8),
+                    load_audio("spawn_fireball2.wav", 0.8),
+                    load_audio("spawn_fireball3.wav", 0.8)
+                 ]
+            )
         }
 
         heart_hud_images = {
@@ -524,6 +531,7 @@ class Game:
                 ):
                     self.hit_player(-1)
 
+                # handle attack
                 if (
                     self.fw.action == "attack"
                     and self.fw.animations["attack"].frame
@@ -547,6 +555,9 @@ class Game:
                     self.enemy_projectiles.append(
                         FireBall(loc, [vel[0], vel[1] - 1], self.fw.flip),
                     )
+                    self.audio_groups["spawn_fireball"].play_random()
+
+                # render fireworm
                 self.canvas.blit(
                     pygame.transform.flip(
                         self.fw.animations[self.fw.action].img(), self.fw.flip, False
