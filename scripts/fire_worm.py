@@ -1,9 +1,9 @@
 import pygame
+import random
 
 from typing import List
 from scripts.animation import Animation
 from scripts.utils import load_img
-
 
 def extract_image(path: str, rects: List[pygame.Rect]):
     base = load_img(path)
@@ -18,8 +18,8 @@ class FireWorm:
     def __init__(self):
         self.max_hp = 2500
         self.hp = self.max_hp
-        self.rect = pygame.Rect(150, 60, 54, 34)
-        self.offset = [0, -24]
+        self.rect = pygame.Rect(100, 50, 54, 30)
+        self.offset = [0, -28]
         self.animations = {
             "idle": Animation(
                 extract_image(
@@ -37,7 +37,7 @@ class FireWorm:
                     ],
                 ),
                 img_dur=6,
-                loop=True
+                loop=False
             ),
             "walk": Animation(
                 extract_image(
@@ -55,7 +55,7 @@ class FireWorm:
                     ],
                 ),
                 img_dur=6,
-                loop=True
+                loop=False
             ),
             "attack": Animation(
                 extract_image(
@@ -80,7 +80,7 @@ class FireWorm:
                     ],
                 ),
                 img_dur=5,
-                loop=True
+                loop=False
             ),
             "death": Animation(
                 extract_image(
@@ -100,8 +100,29 @@ class FireWorm:
                 loop=False
             ),
         }
-        self.action = "attack"
+        self.action = "idle"
         self.flip = False
 
     def update(self):
         self.animations[self.action].update()
+
+    def move(self):
+        self.action = "walk"
+        self.animations["walk"] = self.animations["walk"].copy()
+
+    def attack(self):
+        self.action = "attack"
+        self.animations["attack"] = self.animations["attack"].copy()
+
+    def idle(self):
+        self.action = "idle"
+        self.animations["idle"] = self.animations["idle"].copy()
+
+    def decide_action(self):
+        # check if the previous action is finished
+        if self.animations[self.action].done:
+            random.choice([self.idle, self.move, self.attack])()
+
+        
+
+

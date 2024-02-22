@@ -472,6 +472,7 @@ class Game:
                 )
             
             self.fw.update()
+            self.fw.decide_action()
             self.canvas.blit(pygame.transform.flip(self.fw.animations[self.fw.action].img(), self.fw.flip, False), (self.fw.rect.x + self.fw.offset[0], self.fw.rect.y + self.fw.offset[1]))
             pygame.draw.rect(self.canvas, "blue", pygame.Rect(self.fw.rect.x, self.fw.rect.y, self.fw.rect.width, self.fw.rect.height), width=1)
 
