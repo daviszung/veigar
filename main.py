@@ -141,6 +141,12 @@ class Game:
                     load_audio("spawn_fireball3.wav", 0.8),
                 ]
             ),
+            "fw_death": AudioGroup(
+                [
+                    load_audio("fw_death1.wav", 0.5),
+                    load_audio("fw_death2.wav", 0.6),
+                ]
+            )
         }
 
         heart_hud_images = {
@@ -562,7 +568,7 @@ class Game:
                         if self.fw.hp <= 0 and self.fw.action != "death":
                             self.fw.action = "death"
                             print("fw dead")
-                            # self.audio_groups["scream"].play_random()
+                            self.audio_groups["fw_death"].play_random()
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
 

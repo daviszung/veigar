@@ -89,7 +89,7 @@ class FireWorm:
                         pygame.Rect(630, 0, 74, 58),
                     ],
                 ),
-                img_dur=10,
+                img_dur=20,
                 loop=False
             ),
         }
