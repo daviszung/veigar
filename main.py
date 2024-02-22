@@ -100,8 +100,11 @@ class Game:
         # pygame.mixer.music.play(-1)
 
         self.audio_groups = {
-            # "jump": load_audio("jump1.wav", 0.2),
-            # "landing": load_audio("landingOnGround.wav", 0.5),
+            "swing": AudioGroup([
+                load_audio("swing1.wav", 0.3),
+                load_audio("swing2.wav", 0.3),
+                load_audio("swing3.wav", 0.3),
+            ]),
             "scream": AudioGroup(
                 [
                     load_audio("scream1.wav", 0.4),
@@ -121,6 +124,9 @@ class Game:
             ),
             "mawface_spawn": AudioGroup(
                 [load_audio("mawface_spawn.wav", 0.5)]
+            ),
+            "mawface_death": AudioGroup(
+                [load_audio("mawface_death.wav", 0.4)]
 
             ),
             "hp_up": AudioGroup(
@@ -240,14 +246,15 @@ class Game:
                 del entities[i]
 
     def hit_player(self, damage: int):
-        self.player.invincibility_frames = 90
-        self.heart_hud.update(damage)
-        if self.heart_hud.hearts <= 0:
-            self.player.action = "dying"
-            self.player.controls_lock = True
-        else:
-            self.player.action = "hit"
+        if self.player.invincibility_frames == 0 and self.heart_hud.hearts > 0:
+            self.player.invincibility_frames = 90
+            self.heart_hud.update(damage)
             self.audio_groups["hit"].play_random()
+            if self.heart_hud.hearts <= 0:
+                self.player.action = "dying"
+                self.player.controls_lock = True
+            else:
+                self.player.action = "hit"
 
     def run(self):
         while True:
@@ -350,6 +357,8 @@ class Game:
             if (
                 self.player.action == "attack" or self.player.action == "attack_crystal"
             ) and self.player.images[self.player.action].frame == 25:
+                self.audio_groups["swing"].play_random()
+
                 projectile_info = [self.player.hitbox.right, 3]
                 if self.player.flip:
                     projectile_info = [self.player.hitbox.left, -3]
@@ -386,8 +395,6 @@ class Game:
                 # collision detections with enemy hitting the player
                 if (
                     enemy.rect.colliderect(self.player.hitbox)
-                    and self.player.invincibility_frames == 0
-                    and self.heart_hud.hearts > 0
                 ):
                     self.hit_player(-1)
                     if enemy.type == "mawface":
@@ -411,10 +418,16 @@ class Game:
                             ),
                         )
 
+                        # enemy death
                         if enemy.hp <= 0:
-                            # enemy death
                             enemy.despawn_mark = True
-                            self.audio_groups["scream"].play_random()
+
+                            # play death sound
+                            if enemy.type == "mawface":
+                                self.audio_groups["mawface_death"].play_random()
+                            elif enemy.type == "imp":
+                                self.audio_groups["scream"].play_random()
+
                             for i in range(10):
                                 self.particles.append(
                                     Particle(
@@ -434,6 +447,7 @@ class Game:
                             if self.player.malice == 100:
                                 self.spawner.pause = True
                                 self.fw = FireWorm([2, 0])
+                                self.enemies.clear()
 
                             # chance of dropping item
                             if random.randint(1, enemy.drop_chance) == 1:
@@ -457,7 +471,6 @@ class Game:
             for p in self.enemy_projectiles:
                 if (
                     p.rect.colliderect(self.player.hitbox)
-                    and self.player.invincibility_frames == 0
                 ):
                     self.hit_player(-1)
                 if p.rect.x < 0 or p.rect.x > self.canvas_width:
@@ -538,7 +551,6 @@ class Game:
 
                 if (
                     self.fw.rect.colliderect(self.player.hitbox)
-                    and self.player.invincibility_frames == 0
                 ):
                     self.hit_player(-1)
                 

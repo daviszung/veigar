@@ -28,7 +28,7 @@ class Spawner:
         }
         if self.pause:
             return info
-        max_enemies = 1 + int(math.log(malice + 1, 2))
+        max_enemies = 1 + int(math.log(malice + 1, 3))
         self.timer += 1
         if len(enemies) == 0 and self.timer % 60 == 0:
             self.spawn_enemy("imp", enemy_hp["imp"], enemies)
