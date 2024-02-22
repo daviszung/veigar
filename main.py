@@ -100,11 +100,13 @@ class Game:
         # pygame.mixer.music.play(-1)
 
         self.audio_groups = {
-            "swing": AudioGroup([
-                load_audio("swing1.wav", 0.3),
-                load_audio("swing2.wav", 0.3),
-                load_audio("swing3.wav", 0.3),
-            ]),
+            "swing": AudioGroup(
+                [
+                    load_audio("swing1.wav", 0.3),
+                    load_audio("swing2.wav", 0.3),
+                    load_audio("swing3.wav", 0.3),
+                ]
+            ),
             "scream": AudioGroup(
                 [
                     load_audio("scream1.wav", 0.4),
@@ -119,16 +121,9 @@ class Game:
                     load_audio("hitB3.wav", 0.4),
                 ]
             ),
-            "mawface_hit": AudioGroup(
-                [load_audio("mawface_hit.wav", 0.5)]
-            ),
-            "mawface_spawn": AudioGroup(
-                [load_audio("mawface_spawn.wav", 0.5)]
-            ),
-            "mawface_death": AudioGroup(
-                [load_audio("mawface_death.wav", 0.4)]
-
-            ),
+            "mawface_hit": AudioGroup([load_audio("mawface_hit.wav", 0.5)]),
+            "mawface_spawn": AudioGroup([load_audio("mawface_spawn.wav", 0.5)]),
+            "mawface_death": AudioGroup([load_audio("mawface_death.wav", 0.4)]),
             "hp_up": AudioGroup(
                 [
                     load_audio("hp_up1.wav", 0.4),
@@ -143,9 +138,9 @@ class Game:
                 [
                     load_audio("spawn_fireball1.wav", 0.8),
                     load_audio("spawn_fireball2.wav", 0.8),
-                    load_audio("spawn_fireball3.wav", 0.8)
-                 ]
-            )
+                    load_audio("spawn_fireball3.wav", 0.8),
+                ]
+            ),
         }
 
         heart_hud_images = {
@@ -393,9 +388,7 @@ class Game:
                     enemy.move(0, self.enemies, terrain_near_enemy)
 
                 # collision detections with enemy hitting the player
-                if (
-                    enemy.rect.colliderect(self.player.hitbox)
-                ):
+                if enemy.rect.colliderect(self.player.hitbox):
                     self.hit_player(-1)
                     if enemy.type == "mawface":
                         self.audio_groups["mawface_hit"].play_random()
@@ -469,9 +462,7 @@ class Game:
 
             # enemy projectile logic
             for p in self.enemy_projectiles:
-                if (
-                    p.rect.colliderect(self.player.hitbox)
-                ):
+                if p.rect.colliderect(self.player.hitbox):
                     self.hit_player(-1)
                 if p.rect.x < 0 or p.rect.x > self.canvas_width:
                     p.despawn_mark = True
@@ -549,11 +540,9 @@ class Game:
                 else:
                     self.fw.move(0, tiles)
 
-                if (
-                    self.fw.rect.colliderect(self.player.hitbox)
-                ):
+                if self.fw.rect.colliderect(self.player.hitbox):
                     self.hit_player(-1)
-                
+
                 for p in self.projectiles:
                     if self.fw.rect.colliderect(p.rect):
                         self.fw.hp -= (self.player.malice // 3) + 1
@@ -570,12 +559,10 @@ class Game:
                         #     ),
                         # )
 
-                        if self.fw.hp <= 0:
+                        if self.fw.hp <= 0 and self.fw.action != "death":
+                            self.fw.action = "death"
                             print("fw dead")
-                            # enemy death
-                            # enemy.despawn_mark = True
                             # self.audio_groups["scream"].play_random()
-
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
 
@@ -585,8 +572,8 @@ class Game:
                                     self.item_images["staff_crystal"],
                                     "staff_crystal",
                                     pygame.Rect(
-                                        self.fw.rect.x + self.fw.offset[0],
-                                        self.fw.rect.y + self.fw.offset[1],
+                                        self.fw.rect.center[0] + self.fw.offset[0],
+                                        self.fw.rect.center[1] + self.fw.offset[1],
                                         16,
                                         16,
                                     ),
@@ -703,6 +690,23 @@ class Game:
             self.despawn_entities(self.particles)
             self.despawn_entities(self.items)
             self.despawn_entities(self.enemy_projectiles)
+            if self.fw and self.fw.despawn_mark:
+                self.spawner.pause = False
+                for i in range(30):
+                    self.particles.append(
+                        Particle(
+                            [self.fw.rect.centerx, self.fw.rect.centery],
+                            [random.randint(-3, 3), random.randint(-3, 3)],
+                            random.randint(2, 8),
+                            random.choice(
+                                [
+                                    pygame.Color(193, 60, 60),
+                                    pygame.Color(132, 15, 15),
+                                ]
+                            ),
+                        )
+                    )
+                self.fw = None
 
             # audio timer
             if self.audio_timer > 0:

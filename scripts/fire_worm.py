@@ -7,7 +7,7 @@ from scripts.utils import extract_image
 
 class FireWorm:
     def __init__(self, loc: List[int]):
-        self.max_hp = 2500
+        self.max_hp = 25
         self.hp = self.max_hp
         self.y_velocity = 0
         self.terminal_velocity = 3
@@ -95,16 +95,15 @@ class FireWorm:
         }
         self.action = "idle"
         self.flip = False
+        self.despawn_mark = False
 
     def update(self):
         self.animations[self.action].update()
-        self.decide_action()
+        if self.action != "death":
+            self.decide_action()
 
-        if self.action == "walk":
-            pass
-
-        if self.action == "attack":
-            pass
+        if self.action == "death" and self.animations["death"].done:
+            self.despawn_mark = True
     
     def walk(self):
         self.action = "walk"

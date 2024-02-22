@@ -1,3 +1,5 @@
-give mawface different sfx like an evil laugh
 
 music for fw boss
+
+fire worm death sound
+fire worm hp bar
