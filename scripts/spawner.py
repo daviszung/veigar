@@ -20,8 +20,11 @@ class Spawner:
     def __init__(self):
         self.timer = 0
         self.enemy_id_count = 1
+        self.pause = False
 
     def tick(self, enemies: List[Enemy], malice: int):
+        if self.pause:
+            return
         max_enemies = 1 + int(math.log(malice + 1, 2))
         self.timer += 1
         if len(enemies) == 0 and self.timer % 60 == 0:
@@ -55,3 +58,4 @@ class Spawner:
         )
         enemies.append(enemy)
         self.enemy_id_count += 1
+    

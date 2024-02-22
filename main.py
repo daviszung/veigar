@@ -143,7 +143,7 @@ class Game:
 
         self.enemies: List[Enemy] = []
 
-        self.fw = FireWorm()
+        self.fw = None
 
         self.item_images = {
             "hp_potion": load_img("frames/flask_big_red.png"),
@@ -207,6 +207,16 @@ class Game:
                 nearby_rects.append(pygame.Rect(i[0] * 16, i[1] * 16, 16, 16))
 
         return nearby_rects
+    
+    def hit_player(self, damage: int):
+        self.player.invincibility_frames = 90
+        self.heart_hud.update(damage)
+        if self.heart_hud.hearts <= 0:
+            self.player.action = "dying"
+            self.player.controls_lock = True
+        else:
+            self.player.action = "hit"
+            self.audio_groups["hit"].play_random()
 
     def run(self):
         while True:
@@ -321,7 +331,7 @@ class Game:
                 )
 
             # spawn new enemies randomly
-            # self.spawner.tick(self.enemies, self.player.malice)
+            self.spawner.tick(self.enemies, self.player.malice)
 
             # move the enemies
             for enemy in self.enemies:
@@ -345,14 +355,7 @@ class Game:
                     enemy.rect.colliderect(self.player.hitbox)
                     and self.player.invincibility_frames == 0
                 ):
-                    self.player.invincibility_frames = 90
-                    self.heart_hud.update(-1)
-                    if self.heart_hud.hearts <= 0:
-                        self.player.action = "dying"
-                        self.player.controls_lock = True
-                    else:
-                        self.player.action = "hit"
-                        self.audio_groups["hit"].play_random()
+                    self.hit_player(-1)
 
             # collision detect with attacks against enemies
             for projectile in self.projectiles:
@@ -392,6 +395,9 @@ class Game:
 
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
+                            if self.player.malice == 1:
+                                self.spawner.pause = True
+                                self.fw = FireWorm([2, 0])
 
                             # chance of dropping item
                             if random.randint(1, enemy.drop_chance) == 1:
@@ -471,10 +477,23 @@ class Game:
                     (enemy.rect.x + enemy.offset[0], enemy.rect.y + enemy.offset[1]),
                 )
             
-            self.fw.update()
-            self.fw.decide_action()
-            self.canvas.blit(pygame.transform.flip(self.fw.animations[self.fw.action].img(), self.fw.flip, False), (self.fw.rect.x + self.fw.offset[0], self.fw.rect.y + self.fw.offset[1]))
-            pygame.draw.rect(self.canvas, "blue", pygame.Rect(self.fw.rect.x, self.fw.rect.y, self.fw.rect.width, self.fw.rect.height), width=1)
+            # fireworm
+            if self.fw:
+                self.fw.update()
+                tiles = self.getNearbyRects(self.fw.rect)
+                if self.player.hitbox.x < self.fw.rect.x and self.fw.action == "walk":
+                    self.fw.move(-1, tiles)
+                    self.fw.flip = True
+                elif self.player.hitbox.x > self.fw.rect.x and self.fw.action == "walk":
+                    self.fw.move(1, tiles)
+                    self.fw.flip = False
+                else:
+                    self.fw.move(0, tiles)
+                    
+                if self.fw.rect.colliderect(self.player.hitbox) and self.player.invincibility_frames == 0:
+                    self.hit_player(-1)
+                self.canvas.blit(pygame.transform.flip(self.fw.animations[self.fw.action].img(), self.fw.flip, False), (self.fw.rect.x + self.fw.offset[0], self.fw.rect.y + self.fw.offset[1]))
+                # pygame.draw.rect(self.canvas, "blue", pygame.Rect(self.fw.rect.x, self.fw.rect.y, self.fw.rect.width, self.fw.rect.height), width=1)
 
             # render player
             self.canvas.blit(

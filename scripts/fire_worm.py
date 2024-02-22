@@ -14,11 +14,12 @@ def extract_image(path: str, rects: List[pygame.Rect]):
 
 
 class FireWorm:
-
-    def __init__(self):
+    def __init__(self, loc: List[int]):
         self.max_hp = 2500
         self.hp = self.max_hp
-        self.rect = pygame.Rect(100, 50, 54, 30)
+        self.y_velocity = 0
+        self.terminal_velocity = 3
+        self.rect = pygame.Rect(loc[0], loc[1], 54, 30)
         self.offset = [0, -28]
         self.animations = {
             "idle": Animation(
@@ -105,10 +106,49 @@ class FireWorm:
 
     def update(self):
         self.animations[self.action].update()
+        self.decide_action()
 
-    def move(self):
+        if self.action == "walk":
+            pass
+
+        if self.action == "attack":
+            pass
+    
+    def walk(self):
         self.action = "walk"
         self.animations["walk"] = self.animations["walk"].copy()
+
+    def move(self, x_movement: int, tiles: List[pygame.Rect]):
+        collisions: List[pygame.Rect] = []
+        self.rect.x += x_movement
+
+        for tile in tiles:
+            if self.rect.colliderect(tile):
+                collisions.append(tile)
+        
+    
+        for tile in collisions:
+            if x_movement > 0:
+                self.rect.right = tile.left
+            elif x_movement < 0:
+                self.rect.left = tile.right
+
+        collisions.clear()
+
+        self.y_velocity = min(self.terminal_velocity, self.y_velocity + 0.1)
+
+        self.rect.y += self.y_velocity
+
+        for tile in tiles:
+            if self.rect.colliderect(tile):
+                collisions.append(tile)
+    
+        for tile in collisions:
+            if self.y_velocity > 0:
+                self.rect.bottom = tile.top
+                self.y_velocity = 0
+            elif self.y_velocity < 0:
+                self.rect.top = tile.bottom
 
     def attack(self):
         self.action = "attack"
@@ -119,9 +159,8 @@ class FireWorm:
         self.animations["idle"] = self.animations["idle"].copy()
 
     def decide_action(self):
-        # check if the previous action is finished
         if self.animations[self.action].done:
-            random.choice([self.idle, self.move, self.attack])()
+            random.choice([self.idle, self.walk, self.attack])()
 
         
 
