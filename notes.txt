@@ -1,5 +1,3 @@
 give mawface different sfx like an evil laugh
 
 music for fw boss
-
-sfx for fw boss attack

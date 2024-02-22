@@ -116,6 +116,13 @@ class Game:
                     load_audio("hitB3.wav", 0.4),
                 ]
             ),
+            "mawface_hit": AudioGroup(
+                [load_audio("mawface_hit.wav", 0.5)]
+            ),
+            "mawface_spawn": AudioGroup(
+                [load_audio("mawface_spawn.wav", 0.5)]
+
+            ),
             "hp_up": AudioGroup(
                 [
                     load_audio("hp_up1.wav", 0.4),
@@ -355,7 +362,9 @@ class Game:
                 )
 
             # spawn new enemies randomly
-            self.spawner.tick(self.enemies, self.player.malice)
+            tick_info = self.spawner.tick(self.enemies, self.player.malice)
+            if tick_info["spawned"] == "mawface":
+                self.audio_groups["mawface_spawn"].play_random()
 
             # move the enemies
             for enemy in self.enemies:
@@ -375,12 +384,14 @@ class Game:
                     enemy.move(0, self.enemies, terrain_near_enemy)
 
                 # collision detections with enemy hitting the player
-
                 if (
                     enemy.rect.colliderect(self.player.hitbox)
                     and self.player.invincibility_frames == 0
+                    and self.heart_hud.hearts > 0
                 ):
                     self.hit_player(-1)
+                    if enemy.type == "mawface":
+                        self.audio_groups["mawface_hit"].play_random()
 
             # collision detect with attacks against enemies
             for projectile in self.projectiles:
@@ -420,7 +431,7 @@ class Game:
 
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
-                            if self.player.malice == 1:
+                            if self.player.malice == 100:
                                 self.spawner.pause = True
                                 self.fw = FireWorm([2, 0])
 
@@ -530,6 +541,48 @@ class Game:
                     and self.player.invincibility_frames == 0
                 ):
                     self.hit_player(-1)
+                
+                for p in self.projectiles:
+                    if self.fw.rect.colliderect(p.rect):
+                        self.fw.hp -= (self.player.malice // 3) + 1
+                        # hp bar updates when hit
+                        # enemy.hp_bar.fill("black")
+                        # pygame.draw.rect(
+                        #     enemy.hp_bar,
+                        #     "red",
+                        #     (
+                        #         0,
+                        #         0,
+                        #         (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp),
+                        #         1,
+                        #     ),
+                        # )
+
+                        if self.fw.hp <= 0:
+                            print("fw dead")
+                            # enemy death
+                            # enemy.despawn_mark = True
+                            # self.audio_groups["scream"].play_random()
+
+                            self.player.malice += 1
+                            self.malice_hud.update(self.player.malice)
+
+                            # chance of dropping item
+                            self.items.append(
+                                Item(
+                                    self.item_images["staff_crystal"],
+                                    "staff_crystal",
+                                    pygame.Rect(
+                                        self.fw.rect.x + self.fw.offset[0],
+                                        self.fw.rect.y + self.fw.offset[1],
+                                        16,
+                                        16,
+                                    ),
+                                    1800,
+                                )
+                            )
+
+                        p.despawn_mark = True
 
                 # handle attack
                 if (

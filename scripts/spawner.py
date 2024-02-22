@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from typing import List
+from typing import List, Dict
 
 from scripts.enemy import Enemy
 
@@ -23,13 +23,17 @@ class Spawner:
         self.pause = False
 
     def tick(self, enemies: List[Enemy], malice: int):
+        info: Dict[str, None | str] = {
+            "spawned": None
+        }
         if self.pause:
-            return
+            return info
         max_enemies = 1 + int(math.log(malice + 1, 2))
         self.timer += 1
         if len(enemies) == 0 and self.timer % 60 == 0:
             self.spawn_enemy("imp", enemy_hp["imp"], enemies)
-            return
+            info["spawned"] = "imp"
+            return info
 
         if (
             len(enemies) < max_enemies
@@ -43,6 +47,8 @@ class Spawner:
                     enemy_to_spawn = "imp"
                     
             self.spawn_enemy(enemy_to_spawn, enemy_hp[enemy_to_spawn], enemies)
+            info["spawned"] = enemy_to_spawn
+        return info
 
 
     def spawn_enemy(self, type: str, hp: int, enemies: List[Enemy]):
