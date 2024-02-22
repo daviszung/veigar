@@ -3,15 +3,7 @@ import random
 
 from typing import List
 from scripts.animation import Animation
-from scripts.utils import load_img
-
-def extract_image(path: str, rects: List[pygame.Rect]):
-    base = load_img(path)
-    all_frames: List[pygame.Surface] = []
-    for r in rects:
-        all_frames.append(base.subsurface(r))
-    return all_frames
-
+from scripts.utils import extract_image
 
 class FireWorm:
     def __init__(self, loc: List[int]):
