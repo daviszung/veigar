@@ -409,12 +409,7 @@ class Game:
                         pygame.draw.rect(
                             enemy.hp_bar,
                             "red",
-                            (
-                                0,
-                                0,
-                                (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp),
-                                1,
-                            ),
+                            (0, 0, (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp), 1),
                         )
 
                         # enemy death
@@ -537,42 +532,49 @@ class Game:
             if self.fw:
                 self.fw.update()
                 tiles = self.getNearbyRects(self.fw.rect)
-                if self.player.hitbox.x < self.fw.rect.x and self.fw.action == "walk":
-                    self.fw.move(-1, tiles)
+                if self.player.hitbox.x < self.fw.rect.x:
                     self.fw.flip = True
-                elif self.player.hitbox.x > self.fw.rect.x and self.fw.action == "walk":
-                    self.fw.move(1, tiles)
+                    if self.fw.action == "walk":
+                        self.fw.move(-1, tiles)
+                    else:
+                        self.fw.move(0, tiles)
+                elif self.player.hitbox.x > self.fw.rect.x:
                     self.fw.flip = False
-                else:
-                    self.fw.move(0, tiles)
+                    if self.fw.action == "walk":
+                        self.fw.move(1, tiles)
+                    else:
+                        self.fw.move(0, tiles)
 
-                if self.fw.rect.colliderect(self.player.hitbox):
+                if self.fw.rect.colliderect(self.player.hitbox) and self.fw.action != "death":
                     self.hit_player(-1)
+
+
+                # fw hp bar
+                self.canvas.blit(self.fw.hp_bar, (10, 164))
 
                 for p in self.projectiles:
                     if self.fw.rect.colliderect(p.rect):
                         self.fw.hp -= (self.player.malice // 3) + 1
+                        self.fw.hp_bar.fill("black")
                         # hp bar updates when hit
-                        # enemy.hp_bar.fill("black")
-                        # pygame.draw.rect(
-                        #     enemy.hp_bar,
-                        #     "red",
-                        #     (
-                        #         0,
-                        #         0,
-                        #         (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp),
-                        #         1,
-                        #     ),
-                        # )
+                        pygame.draw.rect(
+                            self.fw.hp_bar,
+                            "red",
+                            (
+                                1,
+                                1,
+                                (self.fw.hp_bar.get_width() * self.fw.hp / self.fw.max_hp) - 1,
+                                6,
+                            ),
+                        )
 
                         if self.fw.hp <= 0 and self.fw.action != "death":
                             self.fw.action = "death"
-                            print("fw dead")
                             self.audio_groups["fw_death"].play_random()
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
 
-                            # chance of dropping item
+                            # drop crystal staff
                             self.items.append(
                                 Item(
                                     self.item_images["staff_crystal"],

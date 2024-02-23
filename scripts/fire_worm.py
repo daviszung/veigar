@@ -7,12 +7,14 @@ from scripts.utils import extract_image
 
 class FireWorm:
     def __init__(self, loc: List[int]):
-        self.max_hp = 25
+        self.max_hp = 2500
         self.hp = self.max_hp
         self.y_velocity = 0
         self.terminal_velocity = 3
         self.rect = pygame.Rect(loc[0], loc[1], 54, 30)
         self.offset = [0, -28]
+        self.hp_bar = pygame.Surface([300, 8])
+        pygame.draw.rect(self.hp_bar, "red", (1, 1, ((self.hp_bar.get_width()) * self.hp / self.max_hp) - 2, 6))
         self.animations = {
             "idle": Animation(
                 extract_image(
