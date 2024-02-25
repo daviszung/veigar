@@ -4,7 +4,7 @@ import random
 
 from typing import Dict, List, Tuple
 
-from scripts.utils import load_img, load_audio
+from scripts.utils import load_img, load_audio, draw_text
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
 from scripts.enemy import Enemy
@@ -17,7 +17,6 @@ from scripts.audio_group import AudioGroup
 from scripts.item import Item
 from scripts.fire_worm import FireWorm
 from scripts.fireball import FireBall
-
 
 map: Dict[str, List[Tuple[int, int]]] = {
     "grass": [
@@ -69,6 +68,7 @@ OFFSET = [
 
 class Game:
     def __init__(self):
+        self.game_state = True
         pygame.init()
         pygame.display.set_caption("veigar")
 
@@ -256,20 +256,47 @@ class Game:
                 self.player.controls_lock = True
             else:
                 self.player.action = "hit"
-
-    def run(self):
-        while True:
+    
+    def pause(self):
+        while not self.game_state:
+            keys = pygame.key.get_pressed()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+            
+            # get the mouse pos and check if colliderect with the text buttons
+            print(pygame.mouse.get_pos())
+            
+            if keys[pygame.K_x]:
+                self.game_state = True
+                return
 
+            self.canvas.fill("gray20")
+            draw_text(self.canvas, "Resume", pygame.Font(None, 16), pygame.Color(255, 255, 255), [int(self.canvas_width // 2), int(self.canvas_height // 4)])
+
+            self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
+
+            pygame.display.update()
+            self.clock.tick(60)
+
+    def run(self):
+        while self.game_state:
             player_x_movement = 0
+
+            keys = pygame.key.get_pressed()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            
+            if keys[pygame.K_p]:
+                self.game_state = False
+                self.pause()
 
             if self.player.controls_lock:
                 pass
             else:
-                keys = pygame.key.get_pressed()
                 if keys[pygame.K_SPACE]:
                     if self.player.airtime < 6 and self.player.y_velocity >= 0:
                         self.player.y_velocity = -3.7

@@ -31,3 +31,8 @@ def extract_image(path: str, rects: List[pygame.Rect]):
     for r in rects:
         all_frames.append(base.subsurface(r))
     return all_frames
+
+def draw_text(surf: pygame.Surface, text: str, font: pygame.Font, color: pygame.Color, loc: List[int]):
+    img = font.render(text, False, color)
+    surf.blit(img, [loc[0], loc[1]])
+    
