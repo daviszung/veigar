@@ -7,7 +7,7 @@ from scripts.utils import extract_image
 
 class FireWorm:
     def __init__(self, loc: List[int]):
-        self.max_hp = 2500
+        self.max_hp = 250
         self.hp = self.max_hp
         self.y_velocity = 0
         self.terminal_velocity = 3

@@ -45,7 +45,7 @@ def draw_text(
     surf.blit(img, rect)
 
 
-def center_rect(rect: pygame.Rect, target_rect: pygame.Rect, specific: str):
+def center_rect(rect: pygame.Rect, target_rect: pygame.Rect, specific: str = ""):
     if specific == "x":
         rect.centerx = target_rect.centerx
         return rect

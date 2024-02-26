@@ -95,6 +95,7 @@ OFFSET = [
 class Game:
     def __init__(self):
         self.game_state = True
+        self.menu = "game"
         pygame.init()
         pygame.display.set_caption("veigar")
 
@@ -130,52 +131,53 @@ class Game:
         self.audio_groups = {
             "swing": AudioGroup(
                 [
-                    load_audio("swing1.wav", self.settings["sfx_vol"]),
-                    load_audio("swing2.wav", self.settings["sfx_vol"]),
-                    load_audio("swing3.wav", self.settings["sfx_vol"]),
+                    load_audio("swing1.wav", self.settings["sfx_vol"] * 0.3),
+                    load_audio("swing2.wav", self.settings["sfx_vol"] * 0.3),
+                    load_audio("swing3.wav", self.settings["sfx_vol"] * 0.3),
                 ]
             ),
             "scream": AudioGroup(
                 [
-                    load_audio("scream1.wav", self.settings["sfx_vol"]),
-                    load_audio("scream2.wav", self.settings["sfx_vol"]),
-                    load_audio("scream3.wav", self.settings["sfx_vol"]),
+                    load_audio("scream1.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("scream2.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("scream3.wav", self.settings["sfx_vol"] * 0.4),
                 ]
             ),
             "hit": AudioGroup(
                 [
-                    load_audio("hitB1.wav", 0.4),
-                    load_audio("hitB2.wav", 0.4),
-                    load_audio("hitB3.wav", 0.4),
+                    load_audio("hitB1.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("hitB2.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("hitB3.wav", self.settings["sfx_vol"] * 0.4),
                 ]
             ),
-            "mawface_hit": AudioGroup([load_audio("mawface_hit.wav", 0.5)]),
-            "mawface_spawn": AudioGroup([load_audio("mawface_spawn.wav", 0.5)]),
-            "mawface_death": AudioGroup([load_audio("mawface_death.wav", 0.4)]),
+            "mawface_hit": AudioGroup([load_audio("mawface_hit.wav", self.settings["sfx_vol"] * 0.5)]),
+            "mawface_spawn": AudioGroup([load_audio("mawface_spawn.wav", self.settings["sfx_vol"] * 0.5)]),
+            "mawface_death": AudioGroup([load_audio("mawface_death.wav", self.settings["sfx_vol"] * 0.4)]),
             "hp_up": AudioGroup(
                 [
-                    load_audio("hp_up1.wav", 0.4),
-                    load_audio("hp_up2.wav", 0.4),
-                    load_audio("hp_up3.wav", 0.4),
+                    load_audio("hp_up1.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("hp_up2.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("hp_up3.wav", self.settings["sfx_vol"] * 0.4),
                 ]
             ),
             "acquire_crystal_staff": AudioGroup(
-                [load_audio("acquire_crystal_staff.wav", 1)]
+                [load_audio("acquire_crystal_staff.wav", self.settings["sfx_vol"] * 1)]
             ),
             "spawn_fireball": AudioGroup(
                 [
-                    load_audio("spawn_fireball1.wav", 0.8),
-                    load_audio("spawn_fireball2.wav", 0.8),
-                    load_audio("spawn_fireball3.wav", 0.8),
+                    load_audio("spawn_fireball1.wav", self.settings["sfx_vol"] * 1.5),
+                    load_audio("spawn_fireball2.wav", self.settings["sfx_vol"] * 1.5),
+                    load_audio("spawn_fireball3.wav", self.settings["sfx_vol"] * 1.5),
                 ]
             ),
             "fw_death": AudioGroup(
                 [
-                    load_audio("fw_death1.wav", 0.5),
-                    load_audio("fw_death2.wav", 0.6),
+                    load_audio("fw_death1.wav", self.settings["sfx_vol"] * 0.5),
+                    load_audio("fw_death2.wav", self.settings["sfx_vol"] * 0.6),
                 ]
             ),
         }
+
 
         heart_hud_images = {
             "heart": load_img("frames/ui_heart_full.png"),
@@ -214,7 +216,7 @@ class Game:
             ),
             Button(
                 "options",
-                self.resume,
+                self.open_options_menu,
                 center_rect(pygame.Rect(0, 80, 110, 20), self.canvas.get_rect(), "x"),
                 "Options",
             ),
@@ -224,6 +226,20 @@ class Game:
                 center_rect(pygame.Rect(0, 120, 110, 20), self.canvas.get_rect(), "x"),
                 "Quit",
             ),
+        ]
+
+        self.options_buttons: List[Button] = [
+            Button(
+                "back",
+                self.go_to_pause_menu,
+                center_rect(pygame.Rect(0, 144, 110, 20), self.canvas.get_rect(), "x"),
+                "Back"
+            ),
+            Button("sfx_vol_inc", self.increment_sfx_vol, pygame.Rect(self.canvas_width - 36, 72, 8, 8), ">"),
+            Button("sfx_vol_dec", self.decrement_sfx_vol, pygame.Rect(self.canvas_width - 72, 72, 8, 8), "<"),
+            Button("music_vol_inc", self.increment_music_vol, pygame.Rect(self.canvas_width - 36, 36, 8, 8), ">"),
+            Button("music_vol_dec", self.decrement_music_vol, pygame.Rect(self.canvas_width - 72, 36, 8, 8), "<"),
+
         ]
 
     def resume(self):
@@ -236,15 +252,36 @@ class Game:
         pygame.quit()
         sys.exit()
     
-    def open_options(self):
-        pass
+    def increment_sfx_vol(self):
+        self.settings["sfx_vol"] = min(1, round(self.settings["sfx_vol"] + 0.1, 2))
+        self.refresh_audio_groups()
+    
+    def decrement_sfx_vol(self):
+        self.settings["sfx_vol"] = max(0, round(self.settings["sfx_vol"] - 0.1, 2))
+        self.refresh_audio_groups()
+
+    def increment_music_vol(self):
+        self.settings["music_vol"] = min(1, round(self.settings["music_vol"] + 0.1, 2))
+        pygame.mixer.music.set_volume(self.settings["music_vol"])
+    
+    def decrement_music_vol(self):
+        self.settings["music_vol"] = max(0, round(self.settings["music_vol"] - 0.1, 2))
+        pygame.mixer.music.set_volume(self.settings["music_vol"])
+    
+    def go_to_pause_menu(self):
+        self.menu = "pause"
+
+    def open_options_menu(self):
+        self.menu = "options"
 
     def pause(self):
+        self.menu = "pause"
         menu_font = pygame.font.Font(None, 18)
         light_gray = pygame.Color(220, 220, 220)
         dark_gray = pygame.Color(50, 50, 50)
         purple = pygame.Color(115, 62, 240)
         dark_purple = pygame.Color(75, 42, 240)
+        prev_mouse_state = pygame.mouse.get_pressed()
 
         while not self.game_state:
             # keys = pygame.key.get_pressed()
@@ -256,25 +293,93 @@ class Game:
 
             # get the mouse pos and check if colliderect with the text buttons
             mouse_pos = pygame.mouse.get_pos()
-            left_click = pygame.mouse.get_pressed()[0]
+            current_mouse_state = pygame.mouse.get_pressed()
+            left_click = False
+            if prev_mouse_state[0] and not current_mouse_state[0]:
+                left_click = True
+            prev_mouse_state = current_mouse_state
 
             self.canvas.fill(dark_purple)
-            for btn in self.pause_buttons:
-                if btn.rect.collidepoint((mouse_pos[0] // 4, mouse_pos[1] // 4)):
-                    btn.text_color = purple
-                    if left_click:
-                        btn.callback()
-                else:
-                    btn.text_color = dark_gray
+            if self.menu == "pause":
+                for btn in self.pause_buttons:
+                    if btn.rect.collidepoint((mouse_pos[0] // 4, mouse_pos[1] // 4)):
+                        btn.text_color = purple
+                        if left_click:
+                            btn.callback()
+                    else:
+                        btn.text_color = dark_gray
 
-                pygame.draw.rect(self.canvas, light_gray, btn.rect)
-                img = menu_font.render(btn.text, False, btn.text_color)
-                self.canvas.blit(img, center_rect(img.get_rect(), btn.rect, ""))
+                    pygame.draw.rect(self.canvas, light_gray, btn.rect)
+                    img = menu_font.render(btn.text, False, btn.text_color)
+                    self.canvas.blit(img, center_rect(img.get_rect(), btn.rect)) 
+            elif self.menu == "options":
+                for btn in self.options_buttons:
+                    if btn.rect.collidepoint((mouse_pos[0] // 4, mouse_pos[1] // 4)):
+                        btn.text_color = purple
+                        if left_click:
+                            btn.callback()
+                    else:
+                        btn.text_color = dark_gray
+
+                    pygame.draw.rect(self.canvas, light_gray, btn.rect)
+                    img = menu_font.render(btn.text, False, btn.text_color)
+                    self.canvas.blit(img, center_rect(img.get_rect(), btn.rect))
 
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
             pygame.display.update()
             self.clock.tick(60)
+    
+    def refresh_audio_groups(self):
+        self.audio_groups = {
+            "swing": AudioGroup(
+                [
+                    load_audio("swing1.wav", self.settings["sfx_vol"] * 0.3),
+                    load_audio("swing2.wav", self.settings["sfx_vol"] * 0.3),
+                    load_audio("swing3.wav", self.settings["sfx_vol"] * 0.3),
+                ]
+            ),
+            "scream": AudioGroup(
+                [
+                    load_audio("scream1.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("scream2.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("scream3.wav", self.settings["sfx_vol"] * 0.4),
+                ]
+            ),
+            "hit": AudioGroup(
+                [
+                    load_audio("hitB1.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("hitB2.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("hitB3.wav", self.settings["sfx_vol"] * 0.4),
+                ]
+            ),
+            "mawface_hit": AudioGroup([load_audio("mawface_hit.wav", self.settings["sfx_vol"] * 0.5)]),
+            "mawface_spawn": AudioGroup([load_audio("mawface_spawn.wav", self.settings["sfx_vol"] * 0.5)]),
+            "mawface_death": AudioGroup([load_audio("mawface_death.wav", self.settings["sfx_vol"] * 0.4)]),
+            "hp_up": AudioGroup(
+                [
+                    load_audio("hp_up1.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("hp_up2.wav", self.settings["sfx_vol"] * 0.4),
+                    load_audio("hp_up3.wav", self.settings["sfx_vol"] * 0.4),
+                ]
+            ),
+            "acquire_crystal_staff": AudioGroup(
+                [load_audio("acquire_crystal_staff.wav", self.settings["sfx_vol"] * 1)]
+            ),
+            "spawn_fireball": AudioGroup(
+                [
+                    load_audio("spawn_fireball1.wav", self.settings["sfx_vol"] * 1.5),
+                    load_audio("spawn_fireball2.wav", self.settings["sfx_vol"] * 1.5),
+                    load_audio("spawn_fireball3.wav", self.settings["sfx_vol"] * 1.5),
+                ]
+            ),
+            "fw_death": AudioGroup(
+                [
+                    load_audio("fw_death1.wav", self.settings["sfx_vol"] * 0.5),
+                    load_audio("fw_death2.wav", self.settings["sfx_vol"] * 0.6),
+                ]
+            ),
+        }
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
