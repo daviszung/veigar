@@ -20,23 +20,27 @@ from scripts.fire_worm import FireWorm
 from scripts.fireball import FireBall
 from scripts.button import Button
 
-
-
+def saveData(data: object):
+    with open("save_file.json", "w+") as file:
+        json.dump(data, file)
 
 def readSave():
-    data = None
+    data = {
+        "sfx_vol": 0.5,
+        "music_vol": 0.5,
+        "jump": pygame.K_SPACE,
+        "left": pygame.K_s,
+        "right": pygame.K_f,
+        "spell1": pygame.K_j,
+    }
     try:
         with open("save_file.json", "r") as file:
             data = json.load(file) 
-            print(data)
 
     except FileNotFoundError:
         with open("save_file.json", "w+") as file:
-            json.dump({
-                "sfx_vol": 0,
-                "music_vol": 0
-            }, file)
-    
+            json.dump(data, file)
+
     return data
 
 
@@ -94,6 +98,7 @@ class Game:
         pygame.init()
         pygame.display.set_caption("veigar")
 
+        self.settings = readSave()
         self.screen_width = 1280
         self.screen_height = 704
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
@@ -120,21 +125,21 @@ class Game:
         pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
 
         pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(0.1)
+        pygame.mixer.music.set_volume(self.settings["music_vol"])
 
         self.audio_groups = {
             "swing": AudioGroup(
                 [
-                    load_audio("swing1.wav", 0.3),
-                    load_audio("swing2.wav", 0.3),
-                    load_audio("swing3.wav", 0.3),
+                    load_audio("swing1.wav", self.settings["sfx_vol"]),
+                    load_audio("swing2.wav", self.settings["sfx_vol"]),
+                    load_audio("swing3.wav", self.settings["sfx_vol"]),
                 ]
             ),
             "scream": AudioGroup(
                 [
-                    load_audio("scream1.wav", 0.4),
-                    load_audio("scream2.wav", 0.4),
-                    load_audio("scream3.wav", 0.4),
+                    load_audio("scream1.wav", self.settings["sfx_vol"]),
+                    load_audio("scream2.wav", self.settings["sfx_vol"]),
+                    load_audio("scream3.wav", self.settings["sfx_vol"]),
                 ]
             ),
             "hit": AudioGroup(
@@ -226,12 +231,15 @@ class Game:
         self.game_state = True
 
     def quit(self):
-        readSave()
+        print(self.settings)
+        saveData(self.settings)
         pygame.quit()
         sys.exit()
+    
+    def open_options(self):
+        pass
 
     def pause(self):
-        pygame.mixer.music.pause()
         menu_font = pygame.font.Font(None, 18)
         light_gray = pygame.Color(220, 220, 220)
         dark_gray = pygame.Color(50, 50, 50)
@@ -239,19 +247,16 @@ class Game:
         dark_purple = pygame.Color(75, 42, 240)
 
         while not self.game_state:
-            keys = pygame.key.get_pressed()
+            # keys = pygame.key.get_pressed()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    saveData(self.settings)
                     pygame.quit()
                     sys.exit()
 
             # get the mouse pos and check if colliderect with the text buttons
             mouse_pos = pygame.mouse.get_pos()
             left_click = pygame.mouse.get_pressed()[0]
-
-            if keys[pygame.K_x]:
-                self.game_state = True
-                return
 
             self.canvas.fill(dark_purple)
             for btn in self.pause_buttons:
