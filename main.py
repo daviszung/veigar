@@ -1,10 +1,11 @@
 import pygame
 import sys
 import random
+import json
 
 from typing import Dict, List, Tuple
 
-from scripts.utils import load_img, load_audio, draw_text, center_rect
+from scripts.utils import load_img, load_audio, center_rect
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
 from scripts.enemy import Enemy
@@ -18,6 +19,26 @@ from scripts.item import Item
 from scripts.fire_worm import FireWorm
 from scripts.fireball import FireBall
 from scripts.button import Button
+
+
+
+
+def readSave():
+    data = None
+    try:
+        with open("save_file.json", "r") as file:
+            data = json.load(file) 
+            print(data)
+
+    except FileNotFoundError:
+        with open("save_file.json", "w+") as file:
+            json.dump({
+                "sfx_vol": 0,
+                "music_vol": 0
+            }, file)
+    
+    return data
+
 
 map: Dict[str, List[Tuple[int, int]]] = {
     "grass": [
@@ -98,7 +119,8 @@ class Game:
 
         pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
 
-        # pygame.mixer.music.play(-1)
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.1)
 
         self.audio_groups = {
             "swing": AudioGroup(
@@ -178,7 +200,7 @@ class Game:
 
         self.items: List[Item] = []
 
-        self.buttons: List[Button] = [
+        self.pause_buttons: List[Button] = [
             Button(
                 "resume",
                 self.resume,
@@ -200,13 +222,16 @@ class Game:
         ]
 
     def resume(self):
+        pygame.mixer.music.unpause()
         self.game_state = True
 
     def quit(self):
+        readSave()
         pygame.quit()
         sys.exit()
 
     def pause(self):
+        pygame.mixer.music.pause()
         menu_font = pygame.font.Font(None, 18)
         light_gray = pygame.Color(220, 220, 220)
         dark_gray = pygame.Color(50, 50, 50)
@@ -229,7 +254,7 @@ class Game:
                 return
 
             self.canvas.fill(dark_purple)
-            for btn in self.buttons:
+            for btn in self.pause_buttons:
                 if btn.rect.collidepoint((mouse_pos[0] // 4, mouse_pos[1] // 4)):
                     btn.text_color = purple
                     if left_click:
