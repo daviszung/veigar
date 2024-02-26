@@ -336,6 +336,11 @@ class Game:
                     pygame.draw.rect(self.canvas, light_gray, label.rect)
                     self.canvas.blit(img, center_rect(img.get_rect(), label.rect))
 
+                img = menu_font.render(str(self.settings["music_vol"]), False, light_gray)
+                self.canvas.blit(img, (self.canvas_width - 58, 34))
+                img = menu_font.render(str(self.settings["sfx_vol"]), False, light_gray)
+                self.canvas.blit(img, (self.canvas_width - 58, 70))
+
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
             pygame.display.update()
