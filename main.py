@@ -19,6 +19,7 @@ from scripts.item import Item
 from scripts.fire_worm import FireWorm
 from scripts.fireball import FireBall
 from scripts.button import Button
+from scripts.label import Label
 
 def saveData(data: object):
     with open("save_file.json", "w+") as file:
@@ -235,11 +236,16 @@ class Game:
                 center_rect(pygame.Rect(0, 144, 110, 20), self.canvas.get_rect(), "x"),
                 "Back"
             ),
-            Button("sfx_vol_inc", self.increment_sfx_vol, pygame.Rect(self.canvas_width - 36, 72, 8, 8), ">"),
-            Button("sfx_vol_dec", self.decrement_sfx_vol, pygame.Rect(self.canvas_width - 72, 72, 8, 8), "<"),
             Button("music_vol_inc", self.increment_music_vol, pygame.Rect(self.canvas_width - 36, 36, 8, 8), ">"),
             Button("music_vol_dec", self.decrement_music_vol, pygame.Rect(self.canvas_width - 72, 36, 8, 8), "<"),
+            Button("sfx_vol_inc", self.increment_sfx_vol, pygame.Rect(self.canvas_width - 36, 72, 8, 8), ">"),
+            Button("sfx_vol_dec", self.decrement_sfx_vol, pygame.Rect(self.canvas_width - 72, 72, 8, 8), "<"),
 
+        ]
+
+        self.options_labels: List[Label] = [
+            Label("music", pygame.Rect(self.canvas_width - 120, 32, 40, 16), "Music"),
+            Label("sfx", pygame.Rect(self.canvas_width - 120, 68, 40, 16), "SFX"),
         ]
 
     def resume(self):
@@ -324,6 +330,11 @@ class Game:
                     pygame.draw.rect(self.canvas, light_gray, btn.rect)
                     img = menu_font.render(btn.text, False, btn.text_color)
                     self.canvas.blit(img, center_rect(img.get_rect(), btn.rect))
+                
+                for label in self.options_labels:
+                    img = menu_font.render(label.text, False, dark_gray) 
+                    pygame.draw.rect(self.canvas, light_gray, label.rect)
+                    self.canvas.blit(img, center_rect(img.get_rect(), label.rect))
 
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
