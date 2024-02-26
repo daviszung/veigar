@@ -14,7 +14,7 @@ def load_img(path: str):
 
 
 def load_images(path: str):
-    images: List[pygame.Surface]  = []
+    images: List[pygame.Surface] = []
     for img_name in sorted(os.listdir(BASE_ASSET_PATH + path)):
         images.append(load_img(path + "/" + img_name))
     return images
@@ -25,6 +25,7 @@ def load_audio(path: str, vol: float):
     audio.set_volume(vol)
     return audio
 
+
 def extract_image(path: str, rects: List[pygame.Rect]):
     base = load_img(path)
     all_frames: List[pygame.Surface] = []
@@ -32,7 +33,25 @@ def extract_image(path: str, rects: List[pygame.Rect]):
         all_frames.append(base.subsurface(r))
     return all_frames
 
-def draw_text(surf: pygame.Surface, text: str, font: pygame.Font, color: pygame.Color, loc: List[int]):
+
+def draw_text(
+    surf: pygame.Surface,
+    text: str,
+    font: pygame.Font,
+    color: pygame.Color,
+    rect: pygame.Rect,
+):
     img = font.render(text, False, color)
-    surf.blit(img, [loc[0], loc[1]])
-    
+    surf.blit(img, rect)
+
+
+def center_rect(rect: pygame.Rect, target_rect: pygame.Rect, specific: str):
+    if specific == "x":
+        rect.centerx = target_rect.centerx
+        return rect
+    elif specific == "y":
+        rect.centery = target_rect.centery
+        return rect
+    else:
+        rect.center = target_rect.center
+        return rect

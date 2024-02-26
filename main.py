@@ -4,7 +4,7 @@ import random
 
 from typing import Dict, List, Tuple
 
-from scripts.utils import load_img, load_audio, draw_text
+from scripts.utils import load_img, load_audio, draw_text, center_rect
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
 from scripts.enemy import Enemy
@@ -17,6 +17,7 @@ from scripts.audio_group import AudioGroup
 from scripts.item import Item
 from scripts.fire_worm import FireWorm
 from scripts.fireball import FireBall
+from scripts.button import Button
 
 map: Dict[str, List[Tuple[int, int]]] = {
     "grass": [
@@ -146,7 +147,7 @@ class Game:
                     load_audio("fw_death1.wav", 0.5),
                     load_audio("fw_death2.wav", 0.6),
                 ]
-            )
+            ),
         }
 
         heart_hud_images = {
@@ -176,6 +177,74 @@ class Game:
         }
 
         self.items: List[Item] = []
+
+        self.buttons: List[Button] = [
+            Button(
+                "resume",
+                self.resume,
+                center_rect(pygame.Rect(0, 40, 110, 20), self.canvas.get_rect(), "x"),
+                "Resume",
+            ),
+            Button(
+                "options",
+                self.resume,
+                center_rect(pygame.Rect(0, 80, 110, 20), self.canvas.get_rect(), "x"),
+                "Options",
+            ),
+            Button(
+                "quit",
+                self.quit,
+                center_rect(pygame.Rect(0, 120, 110, 20), self.canvas.get_rect(), "x"),
+                "Quit",
+            ),
+        ]
+
+    def resume(self):
+        self.game_state = True
+
+    def quit(self):
+        pygame.quit()
+        sys.exit()
+
+    def pause(self):
+        menu_font = pygame.font.Font(None, 18)
+        light_gray = pygame.Color(220, 220, 220)
+        dark_gray = pygame.Color(50, 50, 50)
+        purple = pygame.Color(115, 62, 240)
+        dark_purple = pygame.Color(75, 42, 240)
+
+        while not self.game_state:
+            keys = pygame.key.get_pressed()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            # get the mouse pos and check if colliderect with the text buttons
+            mouse_pos = pygame.mouse.get_pos()
+            left_click = pygame.mouse.get_pressed()[0]
+
+            if keys[pygame.K_x]:
+                self.game_state = True
+                return
+
+            self.canvas.fill(dark_purple)
+            for btn in self.buttons:
+                if btn.rect.collidepoint((mouse_pos[0] // 4, mouse_pos[1] // 4)):
+                    btn.text_color = purple
+                    if left_click:
+                        btn.callback()
+                else:
+                    btn.text_color = dark_gray
+
+                pygame.draw.rect(self.canvas, light_gray, btn.rect)
+                img = menu_font.render(btn.text, False, btn.text_color)
+                self.canvas.blit(img, center_rect(img.get_rect(), btn.rect, ""))
+
+            self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
+
+            pygame.display.update()
+            self.clock.tick(60)
 
     def collision_test(self, hitbox: pygame.Rect, tiles: List[pygame.Rect]):
         collisions: List[pygame.Rect] = []
@@ -256,29 +325,6 @@ class Game:
                 self.player.controls_lock = True
             else:
                 self.player.action = "hit"
-    
-    def pause(self):
-        while not self.game_state:
-            keys = pygame.key.get_pressed()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-            
-            # get the mouse pos and check if colliderect with the text buttons
-            print(pygame.mouse.get_pos())
-            
-            if keys[pygame.K_x]:
-                self.game_state = True
-                return
-
-            self.canvas.fill("gray20")
-            draw_text(self.canvas, "Resume", pygame.Font(None, 16), pygame.Color(255, 255, 255), [int(self.canvas_width // 2), int(self.canvas_height // 4)])
-
-            self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
-
-            pygame.display.update()
-            self.clock.tick(60)
 
     def run(self):
         while self.game_state:
@@ -289,7 +335,7 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-            
+
             if keys[pygame.K_p]:
                 self.game_state = False
                 self.pause()
@@ -436,7 +482,12 @@ class Game:
                         pygame.draw.rect(
                             enemy.hp_bar,
                             "red",
-                            (0, 0, (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp), 1),
+                            (
+                                0,
+                                0,
+                                (enemy.hp_bar.get_width() * enemy.hp / enemy.max_hp),
+                                1,
+                            ),
                         )
 
                         # enemy death
@@ -572,9 +623,11 @@ class Game:
                     else:
                         self.fw.move(0, tiles)
 
-                if self.fw.rect.colliderect(self.player.hitbox) and self.fw.action != "death":
+                if (
+                    self.fw.rect.colliderect(self.player.hitbox)
+                    and self.fw.action != "death"
+                ):
                     self.hit_player(-1)
-
 
                 # fw hp bar
                 self.canvas.blit(self.fw.hp_bar, (10, 164))
@@ -590,7 +643,12 @@ class Game:
                             (
                                 1,
                                 1,
-                                (self.fw.hp_bar.get_width() * self.fw.hp / self.fw.max_hp) - 1,
+                                (
+                                    self.fw.hp_bar.get_width()
+                                    * self.fw.hp
+                                    / self.fw.max_hp
+                                )
+                                - 1,
                                 6,
                             ),
                         )
