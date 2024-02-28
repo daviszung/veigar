@@ -20,10 +20,13 @@ from scripts.fire_worm import FireWorm
 from scripts.fireball import FireBall
 from scripts.button import Button
 from scripts.label import Label
+from scripts.KeyBindSetting import KeyBindSetting
+
 
 def saveData(data: object):
     with open("save_file.json", "w+") as file:
         json.dump(data, file)
+
 
 def readSave():
     data = {
@@ -36,7 +39,7 @@ def readSave():
     }
     try:
         with open("save_file.json", "r") as file:
-            data = json.load(file) 
+            data = json.load(file)
 
     except FileNotFoundError:
         with open("save_file.json", "w+") as file:
@@ -99,6 +102,7 @@ class Game:
         self.menu = "game"
         pygame.init()
         pygame.display.set_caption("veigar")
+        pygame.display.set_icon(pygame.image.load("assets/mage/Faces/face_normal.png"))
 
         self.settings = readSave()
         self.screen_width = 1280
@@ -151,9 +155,15 @@ class Game:
                     load_audio("hitB3.wav", self.settings["sfx_vol"] * 0.4),
                 ]
             ),
-            "mawface_hit": AudioGroup([load_audio("mawface_hit.wav", self.settings["sfx_vol"] * 0.5)]),
-            "mawface_spawn": AudioGroup([load_audio("mawface_spawn.wav", self.settings["sfx_vol"] * 0.5)]),
-            "mawface_death": AudioGroup([load_audio("mawface_death.wav", self.settings["sfx_vol"] * 0.4)]),
+            "mawface_hit": AudioGroup(
+                [load_audio("mawface_hit.wav", self.settings["sfx_vol"] * 0.5)]
+            ),
+            "mawface_spawn": AudioGroup(
+                [load_audio("mawface_spawn.wav", self.settings["sfx_vol"] * 0.5)]
+            ),
+            "mawface_death": AudioGroup(
+                [load_audio("mawface_death.wav", self.settings["sfx_vol"] * 0.4)]
+            ),
             "hp_up": AudioGroup(
                 [
                     load_audio("hp_up1.wav", self.settings["sfx_vol"] * 0.4),
@@ -178,7 +188,6 @@ class Game:
                 ]
             ),
         }
-
 
         heart_hud_images = {
             "heart": load_img("frames/ui_heart_full.png"),
@@ -234,18 +243,47 @@ class Game:
                 "back",
                 self.go_to_pause_menu,
                 center_rect(pygame.Rect(0, 144, 110, 20), self.canvas.get_rect(), "x"),
-                "Back"
+                "Back",
             ),
-            Button("music_vol_inc", self.increment_music_vol, pygame.Rect(self.canvas_width - 36, 36, 8, 8), ">"),
-            Button("music_vol_dec", self.decrement_music_vol, pygame.Rect(self.canvas_width - 72, 36, 8, 8), "<"),
-            Button("sfx_vol_inc", self.increment_sfx_vol, pygame.Rect(self.canvas_width - 36, 72, 8, 8), ">"),
-            Button("sfx_vol_dec", self.decrement_sfx_vol, pygame.Rect(self.canvas_width - 72, 72, 8, 8), "<"),
-
+            Button(
+                "music_vol_inc",
+                self.increment_music_vol,
+                pygame.Rect(self.canvas_width - 36, 36, 8, 8),
+                ">",
+            ),
+            Button(
+                "music_vol_dec",
+                self.decrement_music_vol,
+                pygame.Rect(self.canvas_width - 72, 36, 8, 8),
+                "<",
+            ),
+            Button(
+                "sfx_vol_inc",
+                self.increment_sfx_vol,
+                pygame.Rect(self.canvas_width - 36, 72, 8, 8),
+                ">",
+            ),
+            Button(
+                "sfx_vol_dec",
+                self.decrement_sfx_vol,
+                pygame.Rect(self.canvas_width - 72, 72, 8, 8),
+                "<",
+            ),
         ]
 
         self.options_labels: List[Label] = [
             Label("music", pygame.Rect(self.canvas_width - 120, 32, 40, 16), "Music"),
             Label("sfx", pygame.Rect(self.canvas_width - 120, 68, 40, 16), "SFX"),
+            Label("left", pygame.Rect(10, 10, 40, 14), "left"),
+            Label("right", pygame.Rect(10, 30, 40, 14), "right"),
+            Label("down", pygame.Rect(10, 50, 40, 14), "down"),
+            Label("jump", pygame.Rect(10, 70, 40, 14), "jump"),
+            Label("spell1", pygame.Rect(90, 10, 40, 14), "spell1"),
+        ]
+
+        self.key_bind_ui: List[KeyBindSetting] = [
+            KeyBindSetting(pygame.Rect(52, 10, 36, 14), int(self.settings["left"]))
+
         ]
 
     def resume(self):
@@ -257,11 +295,11 @@ class Game:
         saveData(self.settings)
         pygame.quit()
         sys.exit()
-    
+
     def increment_sfx_vol(self):
         self.settings["sfx_vol"] = min(1, round(self.settings["sfx_vol"] + 0.1, 2))
         self.refresh_audio_groups()
-    
+
     def decrement_sfx_vol(self):
         self.settings["sfx_vol"] = max(0, round(self.settings["sfx_vol"] - 0.1, 2))
         self.refresh_audio_groups()
@@ -269,11 +307,11 @@ class Game:
     def increment_music_vol(self):
         self.settings["music_vol"] = min(1, round(self.settings["music_vol"] + 0.1, 2))
         pygame.mixer.music.set_volume(self.settings["music_vol"])
-    
+
     def decrement_music_vol(self):
         self.settings["music_vol"] = max(0, round(self.settings["music_vol"] - 0.1, 2))
         pygame.mixer.music.set_volume(self.settings["music_vol"])
-    
+
     def go_to_pause_menu(self):
         self.menu = "pause"
 
@@ -317,7 +355,7 @@ class Game:
 
                     pygame.draw.rect(self.canvas, light_gray, btn.rect)
                     img = menu_font.render(btn.text, False, btn.text_color)
-                    self.canvas.blit(img, center_rect(img.get_rect(), btn.rect)) 
+                    self.canvas.blit(img, center_rect(img.get_rect(), btn.rect))
             elif self.menu == "options":
                 for btn in self.options_buttons:
                     if btn.rect.collidepoint((mouse_pos[0] // 4, mouse_pos[1] // 4)):
@@ -330,22 +368,27 @@ class Game:
                     pygame.draw.rect(self.canvas, light_gray, btn.rect)
                     img = menu_font.render(btn.text, False, btn.text_color)
                     self.canvas.blit(img, center_rect(img.get_rect(), btn.rect))
-                
+
                 for label in self.options_labels:
-                    img = menu_font.render(label.text, False, dark_gray) 
+                    img = menu_font.render(label.text, False, dark_gray)
                     pygame.draw.rect(self.canvas, light_gray, label.rect)
                     self.canvas.blit(img, center_rect(img.get_rect(), label.rect))
 
-                img = menu_font.render(str(self.settings["music_vol"]), False, light_gray)
+                img = menu_font.render(
+                    str(self.settings["music_vol"]), False, light_gray
+                )
                 self.canvas.blit(img, (self.canvas_width - 58, 34))
                 img = menu_font.render(str(self.settings["sfx_vol"]), False, light_gray)
                 self.canvas.blit(img, (self.canvas_width - 58, 70))
+
+                for kb in self.key_bind_ui:
+                    self.canvas.blit(kb.surf, kb.rect)
 
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
             pygame.display.update()
             self.clock.tick(60)
-    
+
     def refresh_audio_groups(self):
         self.audio_groups = {
             "swing": AudioGroup(
@@ -369,9 +412,15 @@ class Game:
                     load_audio("hitB3.wav", self.settings["sfx_vol"] * 0.4),
                 ]
             ),
-            "mawface_hit": AudioGroup([load_audio("mawface_hit.wav", self.settings["sfx_vol"] * 0.5)]),
-            "mawface_spawn": AudioGroup([load_audio("mawface_spawn.wav", self.settings["sfx_vol"] * 0.5)]),
-            "mawface_death": AudioGroup([load_audio("mawface_death.wav", self.settings["sfx_vol"] * 0.4)]),
+            "mawface_hit": AudioGroup(
+                [load_audio("mawface_hit.wav", self.settings["sfx_vol"] * 0.5)]
+            ),
+            "mawface_spawn": AudioGroup(
+                [load_audio("mawface_spawn.wav", self.settings["sfx_vol"] * 0.5)]
+            ),
+            "mawface_death": AudioGroup(
+                [load_audio("mawface_death.wav", self.settings["sfx_vol"] * 0.4)]
+            ),
             "hp_up": AudioGroup(
                 [
                     load_audio("hp_up1.wav", self.settings["sfx_vol"] * 0.4),
