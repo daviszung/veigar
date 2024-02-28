@@ -282,9 +282,10 @@ class Game:
         ]
 
         self.key_bind_ui: List[KeyBindSetting] = [
-            KeyBindSetting(pygame.Rect(52, 10, 36, 14), int(self.settings["left"]))
-
+            KeyBindSetting(1, pygame.Rect(52, 10, 36, 14), int(self.settings["left"]), "left")
         ]
+
+        self.selected_key_bind = None
 
     def resume(self):
         pygame.mixer.music.unpause()
@@ -334,9 +335,23 @@ class Game:
                     saveData(self.settings)
                     pygame.quit()
                     sys.exit()
+                elif event.type == pygame.KEYDOWN and self.selected_key_bind:
+                    identifier = self.selected_key_bind.id
+                    print(event.key)
+                    self.selected_key_bind.key = event.key
+                    for i, kb in enumerate(self.key_bind_ui):
+                        if kb.id == identifier:
+                            self.settings[kb.settings_name] = event.key
+                            self.key_bind_ui[i] = KeyBindSetting(identifier, kb.rect, event.key, kb.settings_name)
+                            self.selected_key_bind = None
+
+                            print(kb, self.settings)
+
+                    pass
 
             # get the mouse pos and check if colliderect with the text buttons
             mouse_pos = pygame.mouse.get_pos()
+            scaled_mouse_pos = (mouse_pos[0] // 4, mouse_pos[1] // 4)
             current_mouse_state = pygame.mouse.get_pressed()
             left_click = False
             if prev_mouse_state[0] and not current_mouse_state[0]:
@@ -346,7 +361,7 @@ class Game:
             self.canvas.fill(dark_purple)
             if self.menu == "pause":
                 for btn in self.pause_buttons:
-                    if btn.rect.collidepoint((mouse_pos[0] // 4, mouse_pos[1] // 4)):
+                    if btn.rect.collidepoint(scaled_mouse_pos):
                         btn.text_color = purple
                         if left_click:
                             btn.callback()
@@ -358,7 +373,7 @@ class Game:
                     self.canvas.blit(img, center_rect(img.get_rect(), btn.rect))
             elif self.menu == "options":
                 for btn in self.options_buttons:
-                    if btn.rect.collidepoint((mouse_pos[0] // 4, mouse_pos[1] // 4)):
+                    if btn.rect.collidepoint(scaled_mouse_pos):
                         btn.text_color = purple
                         if left_click:
                             btn.callback()
@@ -383,6 +398,11 @@ class Game:
 
                 for kb in self.key_bind_ui:
                     self.canvas.blit(kb.surf, kb.rect)
+                    if left_click and kb.rect.collidepoint(scaled_mouse_pos):
+                        kb.surf = pygame.Surface(kb.rect.size)
+                        kb.surf.fill("purple")
+                        self.selected_key_bind = kb
+                        print("control thing clicked")
 
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
@@ -543,7 +563,7 @@ class Game:
             if self.player.controls_lock:
                 pass
             else:
-                if keys[pygame.K_SPACE]:
+                if keys[int(self.settings["jump"])]:
                     if self.player.airtime < 6 and self.player.y_velocity >= 0:
                         self.player.y_velocity = -3.7
                     elif (
@@ -567,13 +587,13 @@ class Game:
                             )
                 if keys[pygame.K_d] and self.player.airtime > 0:
                     self.player.y_velocity += 0.1
-                if keys[pygame.K_s]:
+                if keys[int(self.settings["left"])]:
                     self.player.flip = True
                     # ensure player doesn't run off screen
                     if self.player.hitbox.x > 0:
                         player_x_movement -= 2
                         self.player.action = "run"
-                if keys[pygame.K_f]:
+                if keys[int(self.settings["right"])]:
                     self.player.flip = False
                     # ensure player doesn't run off screen
                     if self.player.hitbox.x < (self.canvas_width - self.player.size):
