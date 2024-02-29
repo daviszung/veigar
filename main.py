@@ -33,6 +33,7 @@ def readSave():
         "sfx_vol": 0.5,
         "music_vol": 0.5,
         "jump": pygame.K_SPACE,
+        "down": pygame.K_d,
         "left": pygame.K_s,
         "right": pygame.K_f,
         "spell1": pygame.K_j,
@@ -282,7 +283,11 @@ class Game:
         ]
 
         self.key_bind_ui: List[KeyBindSetting] = [
-            KeyBindSetting(1, pygame.Rect(52, 10, 36, 14), int(self.settings["left"]), "left")
+            KeyBindSetting(1, pygame.Rect(52, 10, 36, 14), int(self.settings["left"]), "left"),
+            KeyBindSetting(2, pygame.Rect(52, 30, 36, 14), int(self.settings["right"]), "right"),
+            KeyBindSetting(3, pygame.Rect(52, 50, 36, 14), int(self.settings["down"]), "down"),
+            KeyBindSetting(4, pygame.Rect(52, 70, 36, 14), int(self.settings["jump"]), "jump"),
+            KeyBindSetting(5, pygame.Rect(132, 10, 36, 14), int(self.settings["spell1"]), "spell1"),
         ]
 
         self.selected_key_bind = None
@@ -292,7 +297,6 @@ class Game:
         self.game_state = True
 
     def quit(self):
-        print(self.settings)
         saveData(self.settings)
         pygame.quit()
         sys.exit()
@@ -337,17 +341,12 @@ class Game:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN and self.selected_key_bind:
                     identifier = self.selected_key_bind.id
-                    print(event.key)
                     self.selected_key_bind.key = event.key
                     for i, kb in enumerate(self.key_bind_ui):
                         if kb.id == identifier:
                             self.settings[kb.settings_name] = event.key
                             self.key_bind_ui[i] = KeyBindSetting(identifier, kb.rect, event.key, kb.settings_name)
                             self.selected_key_bind = None
-
-                            print(kb, self.settings)
-
-                    pass
 
             # get the mouse pos and check if colliderect with the text buttons
             mouse_pos = pygame.mouse.get_pos()
@@ -402,7 +401,6 @@ class Game:
                         kb.surf = pygame.Surface(kb.rect.size)
                         kb.surf.fill("purple")
                         self.selected_key_bind = kb
-                        print("control thing clicked")
 
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
 
@@ -585,7 +583,7 @@ class Game:
                                     pygame.Color(225, 205, 205),
                                 )
                             )
-                if keys[pygame.K_d] and self.player.airtime > 0:
+                if keys[int(self.settings["down"])] and self.player.airtime > 0:
                     self.player.y_velocity += 0.1
                 if keys[int(self.settings["left"])]:
                     self.player.flip = True
@@ -599,7 +597,7 @@ class Game:
                     if self.player.hitbox.x < (self.canvas_width - self.player.size):
                         player_x_movement += 2
                         self.player.action = "run"
-                if keys[pygame.K_j] and not keys[pygame.K_s] and not keys[pygame.K_f]:
+                if keys[int(self.settings["spell1"])] and not keys[int(self.settings["left"])] and not keys[int(self.settings["right"])]:
                     if self.player.staff == "wood":
                         self.player.action = "attack"
                         self.player.images["attack"] = self.player.images[
