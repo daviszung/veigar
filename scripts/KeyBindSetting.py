@@ -9,7 +9,7 @@ class KeyBindSetting():
         self.key = key
         self.settings_name = settings_name
 
-        font = pygame.Font(None, 16)
+        font = pygame.Font("./assets/fonts/KodeMonoVariableWeight.ttf", 10)
         img = font.render(pygame.key.name(self.key), False, pygame.Color(255, 255, 255))
         self.surf.blit(img, center_rect(img.get_rect(), self.surf.get_rect()))
     

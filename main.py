@@ -283,11 +283,21 @@ class Game:
         ]
 
         self.key_bind_ui: List[KeyBindSetting] = [
-            KeyBindSetting(1, pygame.Rect(52, 10, 36, 14), int(self.settings["left"]), "left"),
-            KeyBindSetting(2, pygame.Rect(52, 30, 36, 14), int(self.settings["right"]), "right"),
-            KeyBindSetting(3, pygame.Rect(52, 50, 36, 14), int(self.settings["down"]), "down"),
-            KeyBindSetting(4, pygame.Rect(52, 70, 36, 14), int(self.settings["jump"]), "jump"),
-            KeyBindSetting(5, pygame.Rect(132, 10, 36, 14), int(self.settings["spell1"]), "spell1"),
+            KeyBindSetting(
+                1, pygame.Rect(52, 10, 36, 14), int(self.settings["left"]), "left"
+            ),
+            KeyBindSetting(
+                2, pygame.Rect(52, 30, 36, 14), int(self.settings["right"]), "right"
+            ),
+            KeyBindSetting(
+                3, pygame.Rect(52, 50, 36, 14), int(self.settings["down"]), "down"
+            ),
+            KeyBindSetting(
+                4, pygame.Rect(52, 70, 36, 14), int(self.settings["jump"]), "jump"
+            ),
+            KeyBindSetting(
+                5, pygame.Rect(132, 10, 36, 14), int(self.settings["spell1"]), "spell1"
+            ),
         ]
 
         self.selected_key_bind = None
@@ -325,7 +335,7 @@ class Game:
 
     def pause(self):
         self.menu = "pause"
-        menu_font = pygame.font.Font(None, 18)
+        menu_font = pygame.font.Font("./assets/fonts/KodeMonoVariableWeight.ttf", 10)
         light_gray = pygame.Color(220, 220, 220)
         dark_gray = pygame.Color(50, 50, 50)
         purple = pygame.Color(115, 62, 240)
@@ -345,7 +355,9 @@ class Game:
                     for i, kb in enumerate(self.key_bind_ui):
                         if kb.id == identifier:
                             self.settings[kb.settings_name] = event.key
-                            self.key_bind_ui[i] = KeyBindSetting(identifier, kb.rect, event.key, kb.settings_name)
+                            self.key_bind_ui[i] = KeyBindSetting(
+                                identifier, kb.rect, event.key, kb.settings_name
+                            )
                             self.selected_key_bind = None
 
             # get the mouse pos and check if colliderect with the text buttons
@@ -597,7 +609,11 @@ class Game:
                     if self.player.hitbox.x < (self.canvas_width - self.player.size):
                         player_x_movement += 2
                         self.player.action = "run"
-                if keys[int(self.settings["spell1"])] and not keys[int(self.settings["left"])] and not keys[int(self.settings["right"])]:
+                if (
+                    keys[int(self.settings["spell1"])]
+                    and not keys[int(self.settings["left"])]
+                    and not keys[int(self.settings["right"])]
+                ):
                     if self.player.staff == "wood":
                         self.player.action = "attack"
                         self.player.images["attack"] = self.player.images[
