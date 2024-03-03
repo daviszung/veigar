@@ -3,6 +3,7 @@ import sys
 import random
 import json
 
+
 from typing import Dict, List, Tuple
 
 from scripts.utils import load_img, load_audio, center_rect
@@ -560,6 +561,10 @@ class Game:
         while self.game_state:
             player_x_movement = 0
 
+            if not pygame.mixer_music.get_busy():
+                pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
+                pygame.mixer_music.play(-1)
+
             keys = pygame.key.get_pressed()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -751,9 +756,13 @@ class Game:
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
                             if self.player.malice == 100:
-                                pygame.mixer.music.load("./assets/audio/fire_worm_battle.wav")
+                                pygame.mixer.music.load(
+                                    "./assets/audio/fire_worm_battle.wav"
+                                )
                                 pygame.mixer.music.play(-1)
-                                pygame.mixer.music.set_volume(self.settings["music_vol"])
+                                pygame.mixer.music.set_volume(
+                                    self.settings["music_vol"]
+                                )
                                 self.spawner.pause = True
                                 self.fw = FireWorm([2, 0])
                                 self.enemies.clear()
@@ -910,6 +919,8 @@ class Game:
                                     1800,
                                 )
                             )
+                            # fade out song and start new song
+                            pygame.mixer_music.fadeout(5000)
 
                         p.despawn_mark = True
 
