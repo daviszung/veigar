@@ -751,6 +751,9 @@ class Game:
                             self.player.malice += 1
                             self.malice_hud.update(self.player.malice)
                             if self.player.malice == 100:
+                                pygame.mixer.music.load("./assets/audio/fire_worm_battle.wav")
+                                pygame.mixer.music.play(-1)
+                                pygame.mixer.music.set_volume(self.settings["music_vol"])
                                 self.spawner.pause = True
                                 self.fw = FireWorm([2, 0])
                                 self.enemies.clear()
