@@ -920,7 +920,7 @@ class Game:
                                 )
                             )
                             # fade out song and start new song
-                            pygame.mixer_music.fadeout(5000)
+                            pygame.mixer_music.fadeout(8000)
 
                         p.despawn_mark = True
 
@@ -979,6 +979,8 @@ class Game:
                 p.rect.x += p.velocity[0]
                 p.rect.y += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, (p.rect.x, p.rect.y), p.radius)
+
+                self.particles.append(Particle([p.rect.x, p.rect.y], [random.randint(-2, 2), random.randint(-2, 2)], random.randint(1, 3), p.color))
 
             # render enemy projectiles
             for p in self.enemy_projectiles:
