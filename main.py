@@ -753,7 +753,7 @@ class Game:
                                     )
                                 )
 
-                            self.player.malice += 1
+                            self.player.malice += enemy.malice_reward
                             self.malice_hud.update(self.player.malice)
                             if self.player.malice == 100:
                                 pygame.mixer.music.load(
@@ -902,7 +902,7 @@ class Game:
                         if self.fw.hp <= 0 and self.fw.action != "death":
                             self.fw.action = "death"
                             self.audio_groups["fw_death"].play_random()
-                            self.player.malice += 1
+                            self.player.malice += 10
                             self.malice_hud.update(self.player.malice)
 
                             # drop crystal staff
