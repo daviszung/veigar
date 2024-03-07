@@ -34,9 +34,9 @@ def readSave():
         "sfx_vol": 0.5,
         "music_vol": 0.5,
         "jump": pygame.K_SPACE,
-        "down": pygame.K_d,
-        "left": pygame.K_s,
-        "right": pygame.K_f,
+        "down": pygame.K_s,
+        "left": pygame.K_a,
+        "right": pygame.K_d,
         "spell1": pygame.K_j,
     }
     try:
@@ -130,7 +130,7 @@ class Game:
         pygame.mixer.init()
         self.audio_timer = 0
 
-        pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
+        pygame.mixer.music.load("./assets/audio/main_theme.wav")
 
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(self.settings["music_vol"])
@@ -562,7 +562,7 @@ class Game:
             player_x_movement = 0
 
             if not pygame.mixer_music.get_busy():
-                pygame.mixer.music.load("./assets/audio/mainTheme1.wav")
+                pygame.mixer.music.load("./assets/audio/main_theme.wav")
                 pygame.mixer_music.play(-1)
 
             keys = pygame.key.get_pressed()
@@ -663,7 +663,7 @@ class Game:
             self.player.update()
 
             # special rendering for attack
-            if self.player.action == "attack" or self.player.action == "attack_crystal":
+            if self.player.action in {"attack", "attack_crystal"}:
                 player_coord = (self.player.hitbox.x, self.player.hitbox.y - 16)
 
             # create projectile when casting attack spell

@@ -26,7 +26,7 @@ class Player:
         self.flip = False
         self.action = "idle"
         self.controls_lock = False
-        self.malice = 99
+        self.malice = 0
         self.staff = "wood"
 
     def update(self):
@@ -36,7 +36,7 @@ class Player:
         self.images[self.action].update()
 
         # idle after an attack
-        if (self.action == "attack" or self.action == "attack_crystal") and self.images[self.action].done:
+        if (self.action in {"attack", "attack_crystal"}) and self.images[self.action].done:
             self.action = "idle"
 
         self.y_velocity = min(self.terminal_velocity, self.y_velocity + 0.2)
