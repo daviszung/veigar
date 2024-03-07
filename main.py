@@ -653,7 +653,7 @@ class Game:
                 self.player.action = "idle"
 
             # changing animation in air and factoring in coyote time
-            if self.player.airtime > 6:
+            if self.player.airtime > 6 and self.player.action != "dying":
                 if self.player.y_velocity < 0:
                     self.player.action = "rising"
                 if self.player.y_velocity > 0:
