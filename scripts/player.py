@@ -26,7 +26,7 @@ class Player:
         self.flip = False
         self.action = "idle"
         self.controls_lock = False
-        self.malice = 150
+        self.malice = 0
         self.staff = "wood"
 
     def update(self):
