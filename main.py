@@ -2,11 +2,12 @@ import pygame
 import sys
 import random
 import json
+import os
 
 
 from typing import Dict, List, Tuple
 
-from scripts.utils import load_img, load_audio, center_rect
+from scripts.utils import load_img, load_audio, center_rect, draw_text
 from scripts.tiles import Tilemap
 from scripts.projectile import Projectile
 from scripts.enemy import Enemy
@@ -23,6 +24,7 @@ from scripts.button import Button
 from scripts.label import Label
 from scripts.KeyBindSetting import KeyBindSetting
 
+os.environ["SDL_VIDEO_CENTERED"] = "1"
 
 def saveData(data: object):
     with open("save_file.json", "w+") as file:
@@ -96,7 +98,6 @@ OFFSET = [
     (-2, -1),
     (-2, 1),
 ]
-
 
 class Game:
     def __init__(self):
@@ -568,6 +569,7 @@ class Game:
             keys = pygame.key.get_pressed()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    saveData(self.settings)
                     pygame.quit()
                     sys.exit()
 
@@ -980,7 +982,14 @@ class Game:
                 p.rect.y += p.velocity[1]
                 pygame.draw.circle(self.canvas, p.color, (p.rect.x, p.rect.y), p.radius)
 
-                self.particles.append(Particle([p.rect.x, p.rect.y], [random.randint(-2, 2), random.randint(-2, 2)], random.randint(1, 3), p.color))
+                self.particles.append(
+                    Particle(
+                        [p.rect.x, p.rect.y],
+                        [random.randint(-2, 2), random.randint(-2, 2)],
+                        random.randint(1, 3),
+                        p.color,
+                    )
+                )
 
             # render enemy projectiles
             for p in self.enemy_projectiles:
@@ -1010,6 +1019,32 @@ class Game:
             # render HUDs
             self.canvas.blit(self.malice_hud.surf, (270, 2))
             self.canvas.blit(self.heart_hud.surf, (4, 4))
+
+            # when dead
+            if self.heart_hud.hearts <= 0:
+                font = pygame.font.Font("./assets/fonts/KodeMonoVariableWeight.ttf", 10)
+                s = pygame.Surface((100, 20))
+                s.fill((115, 62, 240))
+                draw_text(
+                    s,
+                    "Restart?",
+                    font,
+                    pygame.Color(255, 255, 255),
+                    center_rect(pygame.Rect(0, 0, 40, 16), s.get_rect()),
+                )
+                centered_surf_rect = center_rect(s.get_rect(), self.canvas.get_rect())
+                self.canvas.blit(s, centered_surf_rect)
+                mouse_pos = pygame.mouse.get_pos()
+                scaled_mouse_pos = (mouse_pos[0] // 4, mouse_pos[1] // 4)
+                current_mouse_state = pygame.mouse.get_pressed()
+                if (
+                    centered_surf_rect.collidepoint(scaled_mouse_pos)
+                    and current_mouse_state[0] == True
+                ):
+                    saveData(self.settings)
+                    pygame.quit()
+                    self.__init__()
+                    
 
             # scale canvas to screen
             self.screen.blit(pygame.transform.scale_by(self.canvas, 4), (0, 0))
